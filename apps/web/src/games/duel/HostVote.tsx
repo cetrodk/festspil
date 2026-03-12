@@ -26,7 +26,7 @@ export default function HostVote({ room }: PhaseComponentProps) {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="max-w-4xl text-center font-display text-4xl font-bold text-[var(--color-text-muted)]"
+        className="max-w-4xl text-center font-display text-5xl font-bold text-[var(--color-text-muted)]"
       >
         {promptText}
       </motion.div>

@@ -29,12 +29,12 @@ export default function HostGuess({ room }: PhaseComponentProps) {
         <motion.h2
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="font-display text-2xl font-bold text-[var(--color-text-muted)]"
+          className="font-display text-3xl font-bold text-[var(--color-text)]"
         >
           {da.tegn.whatIsBeingDrawn}
         </motion.h2>
         <div className="flex items-center gap-4">
-          <div className="text-5xl font-mono font-bold text-[var(--color-primary)] glow-text">
+          <div className="text-8xl font-mono font-bold text-[var(--color-primary)] glow-text">
             <CountdownTimer
               deadline={room.phaseDeadline ?? null}
               onTick={handleTick}

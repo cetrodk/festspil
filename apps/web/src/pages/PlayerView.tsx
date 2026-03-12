@@ -5,55 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { api } from "../../convex/_generated/api";
 import { useSessionId } from "@/providers/SessionProvider";
 import { gameComponents } from "@/games/registry";
-import { AVATARS } from "@/lib/avatars";
 import { GameAvatar } from "@/components/GameAvatar";
+import { AvatarPickerModal } from "@/components/AvatarPickerModal";
 import { da } from "@/lib/da";
-
-function AvatarPickerGrid({
-  roomId,
-  sessionId,
-  currentImage,
-  onClose,
-}: {
-  roomId: any;
-  sessionId: string;
-  currentImage?: string;
-  onClose: () => void;
-}) {
-  const changeAvatar = useMutation(api.players.changeAvatar);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: "auto" }}
-      exit={{ opacity: 0, height: 0 }}
-      className="overflow-hidden"
-    >
-      <div className="grid grid-cols-6 gap-2 rounded-xl bg-[var(--color-surface)] p-3 mt-2">
-        {AVATARS.map((avatar) => (
-          <button
-            key={avatar.name}
-            onClick={() => {
-              changeAvatar({ roomId, sessionId, avatarImage: avatar.name });
-              onClose();
-            }}
-            className={`rounded-lg p-1 transition-transform hover:scale-110 active:scale-95 cursor-pointer ${
-              avatar.name === currentImage
-                ? "ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/20"
-                : ""
-            }`}
-          >
-            <img
-              src={avatar.src}
-              alt={avatar.name}
-              className="h-10 w-10 rounded-md object-cover"
-            />
-          </button>
-        ))}
-      </div>
-    </motion.div>
-  );
-}
 
 function LeaveButton({ roomId, sessionId }: { roomId: any; sessionId: string }) {
   const leaveRoom = useMutation(api.players.leaveRoom);
@@ -82,7 +36,8 @@ export function PlayerView() {
     code ? { code, sessionId } : "skip",
   );
 
-  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
+  const [avatarModalOpen, setAvatarModalOpen] = useState(false);
+  const changeAvatar = useMutation(api.players.changeAvatar);
 
   if (!room) {
     return (
@@ -198,7 +153,7 @@ export function PlayerView() {
                   animate={{ opacity: 1, x: 0 }}
                 >
                   <div
-                    onClick={isMe ? () => setAvatarPickerOpen(!avatarPickerOpen) : undefined}
+                    onClick={isMe ? () => setAvatarModalOpen(true) : undefined}
                     className={`flex items-center gap-3 rounded-xl bg-[var(--color-surface)] p-2.5 transition-all ${
                       isMe ? "cursor-pointer ring-1 ring-[var(--color-primary)]/40 hover:ring-[var(--color-primary)]/70" : ""
                     }`}
@@ -211,22 +166,24 @@ export function PlayerView() {
                       </span>
                     ) : null}
                   </div>
-                  <AnimatePresence>
-                    {isMe && avatarPickerOpen ? (
-                      <AvatarPickerGrid
-                        roomId={room._id}
-                        sessionId={sessionId}
-                        currentImage={currentPlayer?.avatarImage}
-                        onClose={() => setAvatarPickerOpen(false)}
-                      />
-                    ) : null}
-                  </AnimatePresence>
                 </motion.li>
               );
             })}
           </AnimatePresence>
         </ul>
       </motion.div>
+
+      <AnimatePresence>
+        {avatarModalOpen ? (
+          <AvatarPickerModal
+            selected={currentPlayer?.avatarImage ?? null}
+            onSelect={(name) => {
+              changeAvatar({ roomId: room._id, sessionId, avatarImage: name ?? "" });
+            }}
+            onClose={() => setAvatarModalOpen(false)}
+          />
+        ) : null}
+      </AnimatePresence>
 
       <p className="text-sm text-[var(--color-text-muted)] animate-gentle-pulse">
         {da.waitingForHost}

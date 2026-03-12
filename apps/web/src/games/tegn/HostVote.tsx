@@ -35,7 +35,7 @@ export default function HostVote({ room }: PhaseComponentProps) {
       {/* Right: answers + timer */}
       <div className="flex-[2] flex flex-col items-center justify-center gap-6">
         <div className="flex items-center gap-4">
-          <div className="text-6xl font-mono font-bold text-[var(--color-primary)] glow-text">
+          <div className="text-8xl font-mono font-bold text-[var(--color-primary)] glow-text">
             <CountdownTimer
               deadline={room.phaseDeadline ?? null}
               onTick={handleTick}

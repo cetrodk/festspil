@@ -25,7 +25,7 @@ export default function HostDraw({ room }: PhaseComponentProps) {
       </motion.h2>
 
       <p className="text-2xl text-[var(--color-text-muted)]">
-        Alle tegner deres hemmelige ord...
+        {da.tegn.drawingSecretWords}
       </p>
 
       <div className="text-8xl font-mono font-bold text-[var(--color-primary)] glow-text">

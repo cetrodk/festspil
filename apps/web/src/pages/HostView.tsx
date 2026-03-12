@@ -71,7 +71,7 @@ function HostSettingsOverlay({
         className="card-glow w-full max-w-sm rounded-2xl bg-[var(--color-bg-warm)] p-6 shadow-2xl"
       >
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-display text-xl font-bold">Indstillinger</h3>
+          <h3 className="font-display text-2xl font-bold">Indstillinger</h3>
           <button
             onClick={onClose}
             className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-2xl leading-none cursor-pointer"
@@ -87,8 +87,8 @@ function HostSettingsOverlay({
             return (
               <div key={key}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-semibold">{label}</span>
-                  <span className="text-sm font-mono font-bold text-[var(--color-primary-light)]">
+                  <span className="text-base font-semibold">{label}</span>
+                  <span className="text-base font-mono font-bold text-[var(--color-primary-light)]">
                     {currentSec}s
                   </span>
                 </div>
@@ -100,7 +100,7 @@ function HostSettingsOverlay({
                   onChange={(e) => handleChange(key, Number(e.target.value))}
                   className="w-full cursor-pointer"
                 />
-                <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
+                <div className="flex justify-between text-sm text-[var(--color-text-muted)]">
                   <span>{min}s</span>
                   <span>{max}s</span>
                 </div>
@@ -233,6 +233,7 @@ export function HostView() {
   const sessionId = useSessionId();
   const room = useQuery(api.rooms.getRoom, code ? { code } : "skip");
   const startGame = useMutation(api.game.startGame);
+  const kickPlayer = useMutation(api.players.kickPlayer);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   if (!room) {
@@ -386,6 +387,13 @@ export function HostView() {
                     afbrudt
                   </span>
                 ) : null}
+                <button
+                  onClick={() => kickPlayer({ roomId: room._id, hostId: sessionId, playerId: player._id })}
+                  className="ml-auto rounded-lg p-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-colors cursor-pointer"
+                  title="Fjern spiller"
+                >
+                  ✕
+                </button>
               </motion.li>
             ))}
           </AnimatePresence>

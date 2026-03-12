@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "../../convex/_generated/api";
 import { useSessionId } from "@/providers/SessionProvider";
-import { AVATARS } from "@/lib/avatars";
+import { AVATARS, getAvatarSrc } from "@/lib/avatars";
+import { AvatarPickerModal } from "@/components/AvatarPickerModal";
 import { da } from "@/lib/da";
 
 export function JoinPage() {
@@ -18,6 +19,7 @@ export function JoinPage() {
   const [joining, setJoining] = useState(false);
   const [dismissedRejoin, setDismissedRejoin] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
+  const [avatarModalOpen, setAvatarModalOpen] = useState(false);
 
   const existingSession = useQuery(api.players.rejoinRoom, { sessionId });
 
@@ -97,52 +99,41 @@ export function JoinPage() {
           autoComplete="off"
           autoFocus
         />
-        <input
-          type="text"
-          maxLength={16}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={da.enterName}
-          className="rounded-xl bg-[var(--color-surface)] p-4 text-center text-xl placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 transition-shadow"
-          autoComplete="off"
-        />
+        <div className="relative flex items-center rounded-xl bg-[var(--color-surface)] focus-within:ring-2 focus-within:ring-[var(--color-primary)]/50 transition-shadow">
+          <button
+            type="button"
+            onClick={() => setAvatarModalOpen(true)}
+            className="shrink-0 ml-3 flex items-center justify-center h-9 w-9 rounded-full bg-[var(--color-surface-light)] hover:bg-[var(--color-primary)]/20 transition-colors cursor-pointer overflow-hidden"
+          >
+            {selectedAvatar ? (
+              <img
+                src={getAvatarSrc(selectedAvatar)}
+                alt={selectedAvatar}
+                className="h-full w-full rounded-full object-cover"
+              />
+            ) : (
+              <span className="text-lg text-[var(--color-text-muted)]">+</span>
+            )}
+          </button>
+          <input
+            type="text"
+            maxLength={16}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={da.enterName}
+            className="flex-1 bg-transparent p-4 text-center text-xl placeholder:text-[var(--color-text-muted)] focus:outline-none"
+            autoComplete="off"
+          />
+          <div className="shrink-0 w-9 mr-3" />
+        </div>
 
         <AnimatePresence>
-          {name.trim() ? (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <p className="mb-2 text-center text-xs font-medium text-[var(--color-text-muted)]">
-                Vælg avatar (valgfrit)
-              </p>
-              <div className="grid grid-cols-6 gap-2">
-                {AVATARS.map((avatar) => (
-                  <button
-                    key={avatar.name}
-                    type="button"
-                    onClick={() =>
-                      setSelectedAvatar(
-                        selectedAvatar === avatar.name ? null : avatar.name,
-                      )
-                    }
-                    className={`rounded-lg p-1 transition-all hover:scale-110 active:scale-95 cursor-pointer ${
-                      avatar.name === selectedAvatar
-                        ? "ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/20 scale-105"
-                        : "bg-[var(--color-surface)]"
-                    }`}
-                  >
-                    <img
-                      src={avatar.src}
-                      alt={avatar.name}
-                      className="h-10 w-10 rounded-md object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            </motion.div>
+          {avatarModalOpen ? (
+            <AvatarPickerModal
+              selected={selectedAvatar}
+              onSelect={setSelectedAvatar}
+              onClose={() => setAvatarModalOpen(false)}
+            />
           ) : null}
         </AnimatePresence>
 

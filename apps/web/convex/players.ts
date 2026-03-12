@@ -103,6 +103,23 @@ export const changeAvatar = mutation({
   },
 });
 
+export const kickPlayer = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    hostId: v.string(),
+    playerId: v.id("players"),
+  },
+  handler: async (ctx, { roomId, hostId, playerId }) => {
+    const room = await ctx.db.get(roomId);
+    if (!room || room.hostId !== hostId || room.status !== "lobby") return;
+
+    const player = await ctx.db.get(playerId);
+    if (!player || player.roomId !== roomId) return;
+
+    await ctx.db.delete(playerId);
+  },
+});
+
 export const leaveRoom = mutation({
   args: {
     roomId: v.id("rooms"),

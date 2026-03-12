@@ -80,13 +80,13 @@ export default function PlayerDraw({ room, sessionId }: PhaseComponentProps) {
       <div className="flex gap-3">
         <button
           onClick={() => canvasRef.current?.undo()}
-          className="flex-1 rounded-xl bg-[var(--color-surface)] p-3 text-sm font-medium transition-opacity active:opacity-70 cursor-pointer"
+          className="flex-1 rounded-xl bg-[var(--color-surface)] p-3 text-base font-semibold transition-opacity active:opacity-70 cursor-pointer"
         >
           {da.tegn.undo}
         </button>
         <button
           onClick={() => canvasRef.current?.clear()}
-          className="flex-1 rounded-xl bg-[var(--color-surface)] p-3 text-sm font-medium transition-opacity active:opacity-70 cursor-pointer"
+          className="flex-1 rounded-xl bg-[var(--color-surface)] p-3 text-base font-semibold transition-opacity active:opacity-70 cursor-pointer"
         >
           {da.tegn.clear}
         </button>
