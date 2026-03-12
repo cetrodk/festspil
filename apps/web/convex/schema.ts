@@ -32,7 +32,8 @@ export default defineSchema({
     lastSeen: v.float64(),
   })
     .index("by_room", ["roomId"])
-    .index("by_session", ["sessionId"]),
+    .index("by_session", ["sessionId"])
+    .index("by_session_room", ["sessionId", "roomId"]),
 
   submissions: defineTable({
     roomId: v.id("rooms"),

@@ -79,7 +79,9 @@ export const submitAnswer = mutation({
       ctx.db.get(roomId),
       ctx.db
         .query("players")
-        .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+        .withIndex("by_session_room", (q) =>
+          q.eq("sessionId", sessionId).eq("roomId", roomId),
+        )
         .first(),
     ]);
 

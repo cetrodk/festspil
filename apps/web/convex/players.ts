@@ -30,10 +30,12 @@ export const joinRoom = mutation({
     // Check if this session already has a player in this room
     const existingPlayer = await ctx.db
       .query("players")
-      .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+      .withIndex("by_session_room", (q) =>
+        q.eq("sessionId", sessionId).eq("roomId", room._id),
+      )
       .first();
 
-    if (existingPlayer && existingPlayer.roomId === room._id) {
+    if (existingPlayer) {
       // Reconnecting — update connection status
       await ctx.db.patch(existingPlayer._id, {
         isConnected: true,
@@ -73,22 +75,28 @@ export const joinRoom = mutation({
 export const rejoinRoom = query({
   args: { sessionId: v.string() },
   handler: async (ctx, { sessionId }) => {
-    const player = await ctx.db
+    const players = await ctx.db
       .query("players")
       .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
-      .first();
+      .collect();
 
-    if (!player) return null;
+    if (players.length === 0) return null;
 
-    const room = await ctx.db.get(player.roomId);
-    if (!room || room.status === "finished") return null;
+    const rooms = await Promise.all(players.map((p) => ctx.db.get(p.roomId)));
 
-    return {
-      playerId: player._id,
-      roomCode: room.code,
-      playerName: player.name,
-      roomStatus: room.status,
-    };
+    for (let i = 0; i < players.length; i++) {
+      const room = rooms[i];
+      if (room && room.status !== "finished") {
+        return {
+          playerId: players[i]._id,
+          roomCode: room.code,
+          playerName: players[i].name,
+          roomStatus: room.status,
+        };
+      }
+    }
+
+    return null;
   },
 });
 
@@ -105,16 +113,22 @@ export const getPlayers = query({
 export const heartbeat = mutation({
   args: { sessionId: v.string() },
   handler: async (ctx, { sessionId }) => {
-    const player = await ctx.db
+    const players = await ctx.db
       .query("players")
       .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
-      .first();
+      .collect();
 
-    if (player) {
-      await ctx.db.patch(player._id, {
-        isConnected: true,
-        lastSeen: Date.now(),
-      });
-    }
+    if (players.length === 0) return;
+
+    const rooms = await Promise.all(players.map((p) => ctx.db.get(p.roomId)));
+    const now = Date.now();
+
+    await Promise.all(
+      players
+        .filter((_, i) => rooms[i] && rooms[i]!.status !== "finished")
+        .map((p) =>
+          ctx.db.patch(p._id, { isConnected: true, lastSeen: now }),
+        ),
+    );
   },
 });

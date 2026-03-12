@@ -103,7 +103,9 @@ export const getRoomForPlayer = query({
         .collect(),
       ctx.db
         .query("players")
-        .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+        .withIndex("by_session_room", (q) =>
+          q.eq("sessionId", sessionId).eq("roomId", room._id),
+        )
         .first(),
       room.roundNumber !== undefined
         ? ctx.db
