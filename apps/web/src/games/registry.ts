@@ -25,4 +25,18 @@ export const gameComponents: Record<string, GameComponents> = {
       scores: lazy(() => import("./duel/PlayerReveal")), // same passive view
     },
   },
+  bluff: {
+    host: {
+      submit: lazy(() => import("./bluff/HostSubmit")),
+      vote: lazy(() => import("./bluff/HostVote")),
+      reveal: lazy(() => import("./bluff/HostReveal")),
+      scores: lazy(() => import("./duel/HostScores")), // reuse game-agnostic scoreboard
+    },
+    player: {
+      submit: lazy(() => import("./bluff/PlayerSubmit")),
+      vote: lazy(() => import("./bluff/PlayerVote")),
+      reveal: lazy(() => import("./duel/PlayerReveal")), // same passive view
+      scores: lazy(() => import("./duel/PlayerReveal")),
+    },
+  },
 };

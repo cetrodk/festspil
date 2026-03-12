@@ -50,6 +50,7 @@ export default defineSchema({
   prompts: defineTable({
     gameType: v.string(),
     text: v.string(),
+    answer: v.optional(v.string()),
     category: v.optional(v.string()),
   }).index("by_game", ["gameType"]),
 });

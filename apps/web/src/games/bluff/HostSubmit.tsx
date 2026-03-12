@@ -1,0 +1,89 @@
+import { useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { CountdownTimer } from "@festspil/ui/CountdownTimer";
+import { sfxTick, sfxUrgent } from "@/lib/sounds";
+import { da } from "@/lib/da";
+import type { PhaseComponentProps } from "../registry";
+
+export default function HostSubmit({ room }: PhaseComponentProps) {
+  const phaseData = room.phaseData ?? {};
+  const submittedCount = room.players?.filter((p: any) => p.hasSubmitted).length ?? 0;
+  const totalPlayers = room.players?.length ?? 0;
+
+  const handleTick = useCallback((s: number) => {
+    if (s <= 5 && s > 0) sfxUrgent();
+    else if (s <= 15 && s > 5) sfxTick();
+  }, []);
+
+  // Highlight the blank in the prompt
+  const promptText = phaseData.promptText ?? "";
+  const parts = promptText.split("___");
+
+  return (
+    <div className="flex flex-col items-center gap-8">
+      <div className="text-sm uppercase tracking-widest text-[var(--color-text-muted)]">
+        {da.round} {room.roundNumber} {da.of} {room.totalRounds}
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-2xl text-center text-4xl font-bold leading-tight"
+      >
+        {parts.length > 1 ? (
+          <>
+            {parts[0]}
+            <span className="border-b-4 border-[var(--color-primary)] px-2">
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </span>
+            {parts[1]}
+          </>
+        ) : (
+          promptText
+        )}
+      </motion.div>
+
+      <div className="text-6xl font-mono font-bold text-[var(--color-primary)]">
+        <CountdownTimer
+          deadline={room.phaseDeadline ?? null}
+          onTick={handleTick}
+        />
+      </div>
+
+      <div className="text-lg text-[var(--color-text-muted)]">
+        {submittedCount}/{totalPlayers} har svaret
+      </div>
+
+      <div className="flex flex-wrap justify-center gap-2">
+        <AnimatePresence>
+          {room.players?.map((p: any) => (
+            <motion.div
+              key={p._id}
+              layout
+              animate={{
+                backgroundColor: p.hasSubmitted
+                  ? p.avatarColor
+                  : "var(--color-surface)",
+                opacity: p.hasSubmitted ? 1 : 0.4,
+                scale: p.hasSubmitted ? [1, 1.15, 1] : 1,
+              }}
+              transition={{ duration: 0.3 }}
+              className="flex items-center gap-2 rounded-full px-3 py-1"
+            >
+              <span className="text-sm font-medium text-white">{p.name}</span>
+              {p.hasSubmitted ? (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="text-xs"
+                >
+                  ✓
+                </motion.span>
+              ) : null}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}

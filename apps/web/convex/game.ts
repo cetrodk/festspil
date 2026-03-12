@@ -6,6 +6,7 @@ import { advancePhaseInternal, getPhaseDuration } from "./lib/advancePhase";
 
 // Ensure game handlers are registered
 import "./games/duel";
+import "./games/bluff";
 
 // ── Public mutations ──────────────────────────────────────────────────
 

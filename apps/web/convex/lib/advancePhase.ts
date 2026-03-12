@@ -5,6 +5,7 @@ import { getGameHandlers } from "../gameHandlers";
 
 // Ensure game handlers are registered before any phase advancement
 import "../games/duel";
+import "../games/bluff";
 
 /** Default phase durations in ms */
 export const DEFAULT_DURATIONS: Record<string, number> = {

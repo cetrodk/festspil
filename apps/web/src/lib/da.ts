@@ -55,9 +55,14 @@ export const da = {
     description: "Find det rigtige svar blandt løgnene",
     writeFake: "Skriv et falsk svar",
     guessReal: "Gæt det rigtige svar",
-    theRealAnswer: "Det rigtige svar var:",
+    theRealAnswer: "Det rigtige svar",
     youFooled: "Du narrede",
     players: "spillere",
+    fooledBy: "narret af",
+    noOneGuessed: "Ingen gættede rigtigt!",
+    yourFake: "Dit svar",
+    correctGuess: "Gættede rigtigt!",
+    wroteThis: "skrev dette",
   },
 
   tegn: {
