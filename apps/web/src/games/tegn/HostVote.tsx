@@ -21,39 +21,44 @@ export default function HostVote({ room }: PhaseComponentProps) {
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      <div className="text-sm uppercase tracking-widest text-[var(--color-text-muted)]">
-        {da.tegn.drawing} {drawingIndex} {da.of} {totalDrawings}
-      </div>
-
-      <div className="w-full max-w-xl">
-        <DrawingDisplay data={drawingData} />
-      </div>
-
-      <div className="flex items-center gap-6">
-        <div className="text-5xl font-mono font-bold text-[var(--color-primary)]">
-          <CountdownTimer
-            deadline={room.phaseDeadline ?? null}
-            onTick={handleTick}
-          />
+    <div className="fixed inset-0 flex p-6 pt-14 gap-8">
+      {/* Left: drawing takes ~60% */}
+      <div className="flex-[3] flex flex-col min-h-0">
+        <div className="text-sm uppercase tracking-widest text-[var(--color-text-muted)] mb-3">
+          {da.tegn.drawing} {drawingIndex} {da.of} {totalDrawings}
         </div>
-        <div className="text-sm text-[var(--color-text-muted)]">
-          {submittedCount}/{totalPlayers} har stemt
+        <div className="flex-1 min-h-0 flex items-center justify-center">
+          <DrawingDisplay data={drawingData} className="max-h-full max-w-full w-auto h-full" />
         </div>
       </div>
 
-      <div className="grid w-full max-w-3xl grid-cols-2 gap-4">
-        {answers.map((answer: any, i: number) => (
-          <motion.div
-            key={answer.id}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }}
-            className="rounded-2xl bg-[var(--color-surface)] p-6 text-center text-xl font-medium"
-          >
-            {answer.text}
-          </motion.div>
-        ))}
+      {/* Right: answers + timer */}
+      <div className="flex-[2] flex flex-col items-center justify-center gap-6">
+        <div className="flex items-center gap-4">
+          <div className="text-6xl font-mono font-bold text-[var(--color-primary)] glow-text">
+            <CountdownTimer
+              deadline={room.phaseDeadline ?? null}
+              onTick={handleTick}
+            />
+          </div>
+          <div className="text-base text-[var(--color-text-muted)]">
+            {submittedCount}/{totalPlayers}
+          </div>
+        </div>
+
+        <div className="w-full flex flex-col gap-4">
+          {answers.map((answer: any, i: number) => (
+            <motion.div
+              key={answer.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }}
+              className="card-glow rounded-2xl bg-[var(--color-surface)] p-6 text-center text-2xl font-semibold"
+            >
+              {answer.text}
+            </motion.div>
+          ))}
+        </div>
       </div>
     </div>
   );

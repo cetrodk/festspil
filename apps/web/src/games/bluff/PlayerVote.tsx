@@ -37,8 +37,8 @@ export default function PlayerVote({ room, sessionId }: PhaseComponentProps) {
         >
           ✓
         </motion.div>
-        <p className="text-2xl font-bold">{da.waiting}</p>
-        <div className="text-4xl font-mono text-[var(--color-primary)]">
+        <p className="font-display text-2xl font-bold">{da.waiting}</p>
+        <div className="text-4xl font-mono font-bold text-[var(--color-primary)]">
           <CountdownTimer deadline={room.phaseDeadline ?? null} />
         </div>
       </div>
@@ -47,7 +47,7 @@ export default function PlayerVote({ room, sessionId }: PhaseComponentProps) {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-4">
-      <div className="text-4xl font-mono text-[var(--color-primary)]">
+      <div className="text-4xl font-mono font-bold text-[var(--color-primary)]">
         <CountdownTimer deadline={room.phaseDeadline ?? null} />
       </div>
 
@@ -70,7 +70,7 @@ export default function PlayerVote({ room, sessionId }: PhaseComponentProps) {
         </div>
       ) : null}
 
-      <p className="text-lg font-bold">{da.bluff.guessReal}</p>
+      <p className="font-display text-xl font-bold">{da.bluff.guessReal}</p>
 
       <div className="flex w-full max-w-xs flex-col gap-3">
         {voteableAnswers.map((answer: any, i: number) => (

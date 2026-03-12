@@ -39,17 +39,20 @@ export default function HostReveal({ room, sessionId }: PhaseComponentProps) {
   const buttonDelay = truthDelay + 0.6;
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      <div className="text-sm uppercase tracking-widest text-[var(--color-text-muted)]">
-        {da.tegn.drawing} {drawingIndex + 1} {da.of} {totalDrawings}
+    <div className="fixed inset-0 flex p-6 pt-14 gap-8">
+      {/* Left: drawing fills available space */}
+      <div className="flex-[3] flex flex-col min-h-0">
+        <div className="text-sm uppercase tracking-widest text-[var(--color-text-muted)] mb-3">
+          {da.tegn.drawing} {drawingIndex + 1} {da.of} {totalDrawings}
+        </div>
+        <div className="flex-1 min-h-0 flex items-center justify-center">
+          <DrawingDisplay data={drawingData} className="max-h-full max-w-full w-auto h-full" />
+        </div>
       </div>
 
-      <div className="w-full max-w-md">
-        <DrawingDisplay data={drawingData} />
-      </div>
-
-      {/* Fakes */}
-      <div className="flex w-full max-w-3xl flex-col gap-4">
+      {/* Right: results */}
+      <div className="flex-[2] flex flex-col justify-center gap-5 overflow-y-auto">
+        {/* Fakes */}
         {fakes.map((result: any, i: number) => (
           <motion.div
             key={result.answerId}
@@ -62,15 +65,15 @@ export default function HostReveal({ room, sessionId }: PhaseComponentProps) {
               name={result.playerName}
               avatarColor={result.avatarColor}
               avatarImage={result.avatarImage}
-              className="h-12 w-12"
+              className="h-14 w-14"
             />
             <div className="flex-1 min-w-0">
-              <p className="text-xl font-semibold">{result.text}</p>
+              <p className="text-xl font-bold">{result.text}</p>
               <p className="text-sm text-[var(--color-text-muted)]">
                 {result.playerName}
               </p>
               {result.voterNames.length > 0 ? (
-                <p className="text-sm text-[var(--color-primary)]">
+                <p className="text-sm text-[var(--color-primary-light)]">
                   {da.bluff.fooledBy}: {result.voterNames.join(", ")}
                 </p>
               ) : null}
@@ -81,7 +84,7 @@ export default function HostReveal({ room, sessionId }: PhaseComponentProps) {
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.4 + 0.3, type: "spring" }}
-                  className="text-2xl font-black text-[var(--color-primary)]"
+                  className="font-display text-2xl font-bold text-[var(--color-primary)]"
                 >
                   +{result.fooledCount * 500}
                 </motion.p>
@@ -98,63 +101,64 @@ export default function HostReveal({ room, sessionId }: PhaseComponentProps) {
             </div>
           </motion.div>
         ))}
-      </div>
 
-      {/* Truth + word reveal */}
-      {truth ? (
+        {/* Truth reveal */}
+        {truth ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: [0, 1.05, 1] }}
+            transition={{
+              delay: truthDelay,
+              duration: 0.5,
+              type: "spring",
+              stiffness: 120,
+            }}
+            className="rounded-2xl bg-[var(--color-primary)]/15 ring-2 ring-[var(--color-primary)] p-6 text-center"
+          >
+            <p className="text-sm uppercase tracking-widest text-[var(--color-primary)]">
+              {da.tegn.theWordWas}
+            </p>
+            <p className="mt-2 font-display text-4xl font-bold">{theWord}</p>
+            {truth.voterNames.length > 0 ? (
+              <p className="mt-2 text-base text-[var(--color-primary-light)]">
+                {da.bluff.correctGuess} {truth.voterNames.join(", ")}
+              </p>
+            ) : (
+              <p className="mt-2 text-base text-[var(--color-text-muted)]">
+                {da.bluff.noOneGuessed}
+              </p>
+            )}
+            {artistBonus ? (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: truthDelay + 0.3 }}
+                className="mt-2 text-base font-bold text-[var(--color-primary)]"
+              >
+                {da.tegn.artistBonus} {artistName} +1000
+              </motion.p>
+            ) : null}
+          </motion.div>
+        ) : null}
+
+        {/* Advance button */}
         <motion.div
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: [0, 1.05, 1] }}
-          transition={{
-            delay: truthDelay,
-            duration: 0.5,
-            type: "spring",
-            stiffness: 120,
-          }}
-          className="w-full max-w-3xl rounded-2xl bg-[var(--color-primary)]/15 ring-2 ring-[var(--color-primary)] p-6 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: buttonDelay }}
+          className="flex items-center justify-center gap-4"
         >
-          <p className="text-sm uppercase tracking-widest text-[var(--color-primary)]">
-            {da.tegn.theWordWas}
-          </p>
-          <p className="mt-2 text-3xl font-black">{theWord}</p>
-          {truth.voterNames.length > 0 ? (
-            <p className="mt-2 text-sm text-[var(--color-primary)]">
-              {da.bluff.correctGuess} {truth.voterNames.join(", ")}
-            </p>
-          ) : (
-            <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-              {da.bluff.noOneGuessed}
-            </p>
-          )}
-          {artistBonus ? (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: truthDelay + 0.3 }}
-              className="mt-2 text-sm font-bold text-[var(--color-primary)]"
-            >
-              {da.tegn.artistBonus} {artistName} +1000
-            </motion.p>
-          ) : null}
+          <button
+            onClick={() => hostAdvance({ roomId: room._id, hostId: sessionId })}
+            className="rounded-2xl bg-[var(--color-primary)] px-10 py-4 text-xl font-bold transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+          >
+            {isLastDrawing ? da.scores : da.tegn.nextDrawing}
+          </button>
+          <span className="text-base text-[var(--color-text-muted)]">
+            <CountdownTimer deadline={room.phaseDeadline ?? null} />s
+          </span>
         </motion.div>
-      ) : null}
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: buttonDelay }}
-        className="flex items-center gap-4"
-      >
-        <button
-          onClick={() => hostAdvance({ roomId: room._id, hostId: sessionId })}
-          className="rounded-xl bg-[var(--color-primary)] px-10 py-4 text-xl font-bold transition-transform hover:scale-105 active:scale-95 cursor-pointer"
-        >
-          {isLastDrawing ? da.scores : da.tegn.nextDrawing}
-        </button>
-        <span className="text-sm text-[var(--color-text-muted)]">
-          <CountdownTimer deadline={room.phaseDeadline ?? null} />s
-        </span>
-      </motion.div>
+      </div>
     </div>
   );
 }

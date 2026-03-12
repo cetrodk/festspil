@@ -9,11 +9,9 @@ import type { PhaseComponentProps } from "../registry";
 export default function HostGuess({ room }: PhaseComponentProps) {
   const phaseData = room.phaseData ?? {};
   const drawingData = phaseData.drawingData ?? [];
-  const artistName = phaseData.currentArtistName ?? "???";
   const drawingIndex = (phaseData.drawingIndex ?? 0) + 1;
   const totalDrawings = phaseData.totalDrawings ?? 1;
   const submittedCount = room.players?.filter((p: any) => p.hasSubmitted).length ?? 0;
-  // Artist doesn't guess, so total is players - 1
   const totalGuessers = (room.players?.length ?? 1) - 1;
 
   const handleTick = useCallback((s: number) => {
@@ -22,41 +20,44 @@ export default function HostGuess({ room }: PhaseComponentProps) {
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      <div className="text-sm uppercase tracking-widest text-[var(--color-text-muted)]">
-        {da.tegn.drawing} {drawingIndex} {da.of} {totalDrawings}
+    <div className="fixed inset-0 flex flex-col items-center p-6 pt-14">
+      {/* Top bar */}
+      <div className="flex w-full items-center justify-between mb-4">
+        <div className="text-sm uppercase tracking-widest text-[var(--color-text-muted)]">
+          {da.tegn.drawing} {drawingIndex} {da.of} {totalDrawings}
+        </div>
+        <motion.h2
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="font-display text-2xl font-bold text-[var(--color-text-muted)]"
+        >
+          {da.tegn.whatIsBeingDrawn}
+        </motion.h2>
+        <div className="flex items-center gap-4">
+          <div className="text-5xl font-mono font-bold text-[var(--color-primary)] glow-text">
+            <CountdownTimer
+              deadline={room.phaseDeadline ?? null}
+              onTick={handleTick}
+            />
+          </div>
+          <div className="text-sm text-[var(--color-text-muted)]">
+            {submittedCount}/{totalGuessers}
+          </div>
+        </div>
       </div>
 
-      <motion.h2
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-2xl font-bold text-[var(--color-text-muted)]"
-      >
-        {da.tegn.whatIsBeingDrawn}
-      </motion.h2>
-
+      {/* Drawing — fills remaining space */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: "spring", stiffness: 200 }}
-        className="w-full max-w-2xl"
+        className="flex-1 w-full min-h-0 flex items-center justify-center"
       >
-        <DrawingDisplay data={drawingData} />
+        <DrawingDisplay data={drawingData} className="max-h-full max-w-full w-auto h-full" />
       </motion.div>
 
-      <div className="flex items-center gap-6">
-        <div className="text-5xl font-mono font-bold text-[var(--color-primary)]">
-          <CountdownTimer
-            deadline={room.phaseDeadline ?? null}
-            onTick={handleTick}
-          />
-        </div>
-        <div className="text-sm text-[var(--color-text-muted)]">
-          {submittedCount}/{totalGuessers} har gættet
-        </div>
-      </div>
-
-      <div className="flex flex-wrap justify-center gap-2">
+      {/* Player pills at bottom */}
+      <div className="flex flex-wrap justify-center gap-3 mt-4">
         <AnimatePresence>
           {room.players?.map((p: any) => {
             const isArtist = p._id === phaseData.currentArtistId;
@@ -74,16 +75,16 @@ export default function HostGuess({ room }: PhaseComponentProps) {
                   scale: !isArtist && p.hasSubmitted ? [1, 1.15, 1] : 1,
                 }}
                 transition={{ duration: 0.3 }}
-                className="flex items-center gap-2 rounded-full px-3 py-1"
+                className="flex items-center gap-2 rounded-full px-4 py-2"
               >
-                <span className="text-sm font-medium text-white">{p.name}</span>
+                <span className="text-base font-semibold text-white">{p.name}</span>
                 {isArtist ? (
-                  <span className="text-xs">✏️</span>
+                  <span className="text-sm">✏️</span>
                 ) : p.hasSubmitted ? (
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="text-xs"
+                    className="text-sm"
                   >
                     ✓
                   </motion.span>

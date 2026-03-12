@@ -25,16 +25,16 @@ export default function HostReveal({ room, sessionId }: PhaseComponentProps) {
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-8">
+    <div className="flex flex-col items-center gap-10">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="max-w-2xl text-center text-2xl font-bold text-[var(--color-text-muted)]"
+        className="max-w-4xl text-center font-display text-4xl font-bold text-[var(--color-text-muted)]"
       >
         {promptText}
       </motion.div>
 
-      <div className="flex w-full max-w-3xl flex-col gap-4">
+      <div className="flex w-full max-w-5xl flex-col gap-5">
         {results.map((result: any, i: number) => {
           const isTop = i === 0 && result.votes > 0;
           return (
@@ -43,7 +43,7 @@ export default function HostReveal({ room, sessionId }: PhaseComponentProps) {
               initial={{ opacity: 0, y: 30, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ delay: i * 0.4, type: "spring", stiffness: 200 }}
-              className={`flex items-center gap-4 rounded-2xl p-5 ${
+              className={`flex items-center gap-5 rounded-2xl p-6 ${
                 isTop
                   ? "bg-[var(--color-primary)]/15 ring-2 ring-[var(--color-primary)]"
                   : "bg-[var(--color-surface)]"
@@ -53,33 +53,32 @@ export default function HostReveal({ room, sessionId }: PhaseComponentProps) {
                 name={result.playerName}
                 avatarColor={result.avatarColor}
                 avatarImage={result.avatarImage}
-                className="h-12 w-12"
+                className="h-16 w-16"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-xl font-semibold">{result.text}</p>
-                <p className="text-sm text-[var(--color-text-muted)]">
+                <p className="text-2xl font-bold">{result.text}</p>
+                <p className="text-base text-[var(--color-text-muted)]">
                   {result.playerName}
                 </p>
               </div>
 
-              {/* Vote bar */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <motion.div
-                  className="h-8 rounded-full bg-[var(--color-primary)]"
+                  className="h-10 rounded-full bg-[var(--color-primary)]"
                   initial={{ width: 0 }}
-                  animate={{ width: Math.max(result.votes * 40, 8) }}
+                  animate={{ width: Math.max(result.votes * 50, 10) }}
                   transition={{ delay: i * 0.4 + 0.2, duration: 0.5 }}
                 />
-                <div className="text-right min-w-[3rem]">
+                <div className="text-right min-w-[4rem]">
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: i * 0.4 + 0.4 }}
-                    className="text-3xl font-black text-[var(--color-primary)]"
+                    className="font-display text-4xl font-bold text-[var(--color-primary)]"
                   >
                     {result.votes}
                   </motion.p>
-                  <p className="text-xs text-[var(--color-text-muted)]">
+                  <p className="text-sm text-[var(--color-text-muted)]">
                     {result.votes === 1 ? "stemme" : "stemmer"}
                   </p>
                 </div>
@@ -96,8 +95,8 @@ export default function HostReveal({ room, sessionId }: PhaseComponentProps) {
           transition={{ delay: results.length * 0.4 + 0.5, type: "spring", stiffness: 150 }}
           className="text-center"
         >
-          <p className="text-sm text-[var(--color-text-muted)]">{da.duel.winner}</p>
-          <p className="text-3xl font-black">{results[0].playerName}</p>
+          <p className="text-base text-[var(--color-text-muted)]">{da.duel.winner}</p>
+          <p className="font-display text-5xl font-bold">{results[0].playerName}</p>
         </motion.div>
       ) : null}
 
@@ -109,11 +108,11 @@ export default function HostReveal({ room, sessionId }: PhaseComponentProps) {
       >
         <button
           onClick={() => hostAdvance({ roomId: room._id, hostId: sessionId })}
-          className="rounded-xl bg-[var(--color-primary)] px-10 py-4 text-xl font-bold transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+          className="rounded-2xl bg-[var(--color-primary)] px-12 py-5 text-2xl font-bold transition-transform hover:scale-105 active:scale-95 cursor-pointer"
         >
           {isLastRound ? da.scores : da.nextRound}
         </button>
-        <span className="text-sm text-[var(--color-text-muted)]">
+        <span className="text-base text-[var(--color-text-muted)]">
           <CountdownTimer deadline={room.phaseDeadline ?? null} />s
         </span>
       </motion.div>

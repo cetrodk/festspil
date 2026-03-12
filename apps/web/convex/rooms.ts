@@ -37,6 +37,21 @@ export const createRoom = mutation({
   },
 });
 
+export const changeGameType = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    hostId: v.string(),
+    gameType: v.string(),
+  },
+  handler: async (ctx, { roomId, hostId, gameType }) => {
+    const room = await ctx.db.get(roomId);
+    if (!room) throw new Error("Room not found");
+    if (room.hostId !== hostId) throw new Error("Only the host can change game");
+    if (room.status !== "lobby") throw new Error("Can only change game in lobby");
+    await ctx.db.patch(roomId, { gameType });
+  },
+});
+
 export const getRoom = query({
   args: { code: v.string() },
   handler: async (ctx, { code }) => {

@@ -18,39 +18,39 @@ export default function HostVote({ room }: PhaseComponentProps) {
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-8">
-      <div className="text-sm uppercase tracking-widest text-[var(--color-text-muted)]">
+    <div className="flex flex-col items-center gap-10">
+      <div className="text-base uppercase tracking-widest text-[var(--color-text-muted)]">
         {da.duel.voteForBest}
       </div>
 
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="max-w-2xl text-center text-2xl font-bold text-[var(--color-text-muted)]"
+        className="max-w-4xl text-center font-display text-4xl font-bold text-[var(--color-text-muted)]"
       >
         {promptText}
       </motion.div>
 
-      <div className="flex items-center gap-6">
-        <div className="text-6xl font-mono font-bold text-[var(--color-primary)]">
+      <div className="flex items-center gap-8">
+        <div className="text-8xl font-mono font-bold text-[var(--color-primary)] glow-text">
           <CountdownTimer
             deadline={room.phaseDeadline ?? null}
             onTick={handleTick}
           />
         </div>
-        <div className="text-sm text-[var(--color-text-muted)]">
+        <div className="text-lg text-[var(--color-text-muted)]">
           {submittedCount}/{totalPlayers} har stemt
         </div>
       </div>
 
-      <div className="grid w-full max-w-3xl grid-cols-2 gap-4">
+      <div className="grid w-full max-w-5xl grid-cols-2 gap-6">
         {answers.map((answer: any, i: number) => (
           <motion.div
             key={answer.id}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }}
-            className="rounded-2xl bg-[var(--color-surface)] p-6 text-center text-xl font-medium"
+            className="card-glow rounded-2xl bg-[var(--color-surface)] p-8 text-center text-2xl font-semibold"
           >
             {answer.text}
           </motion.div>

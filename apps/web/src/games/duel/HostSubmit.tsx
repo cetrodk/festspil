@@ -16,31 +16,31 @@ export default function HostSubmit({ room }: PhaseComponentProps) {
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-8">
-      <div className="text-sm uppercase tracking-widest text-[var(--color-text-muted)]">
+    <div className="flex flex-col items-center gap-10">
+      <div className="text-base uppercase tracking-widest text-[var(--color-text-muted)]">
         {da.round} {room.roundNumber} {da.of} {room.totalRounds}
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-2xl text-center text-4xl font-bold leading-tight"
+        className="max-w-4xl text-center font-display text-6xl font-bold leading-tight"
       >
         {phaseData.promptText}
       </motion.div>
 
-      <div className="text-6xl font-mono font-bold text-[var(--color-primary)]">
+      <div className="text-8xl font-mono font-bold text-[var(--color-primary)] glow-text">
         <CountdownTimer
           deadline={room.phaseDeadline ?? null}
           onTick={handleTick}
         />
       </div>
 
-      <div className="text-lg text-[var(--color-text-muted)]">
+      <div className="text-2xl text-[var(--color-text-muted)]">
         {submittedCount}/{totalPlayers} har svaret
       </div>
 
-      <div className="flex flex-wrap justify-center gap-2">
+      <div className="flex flex-wrap justify-center gap-3">
         <AnimatePresence>
           {room.players?.map((p: any) => (
             <motion.div
@@ -54,14 +54,14 @@ export default function HostSubmit({ room }: PhaseComponentProps) {
                 scale: p.hasSubmitted ? [1, 1.15, 1] : 1,
               }}
               transition={{ duration: 0.3 }}
-              className="flex items-center gap-2 rounded-full px-3 py-1"
+              className="flex items-center gap-2 rounded-full px-4 py-2"
             >
-              <span className="text-sm font-medium text-white">{p.name}</span>
+              <span className="text-base font-semibold text-white">{p.name}</span>
               {p.hasSubmitted ? (
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="text-xs"
+                  className="text-sm"
                 >
                   ✓
                 </motion.span>

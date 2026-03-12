@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { api } from "../../convex/_generated/api";
 import { useSessionId } from "@/providers/SessionProvider";
 import { AVATARS } from "@/lib/avatars";
@@ -18,7 +19,6 @@ export function JoinPage() {
   const [dismissedRejoin, setDismissedRejoin] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
 
-  // Check for existing active session
   const existingSession = useQuery(api.players.rejoinRoom, { sessionId });
 
   async function handleJoin(e: React.FormEvent) {
@@ -44,30 +44,46 @@ export function JoinPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-4">
-      <h1 className="text-4xl font-black">{da.title}</h1>
+      <motion.h1
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="font-display text-5xl font-bold glow-text"
+      >
+        {da.title}
+      </motion.h1>
 
-      {existingSession && !dismissedRejoin ? (
-        <div className="flex w-full max-w-xs flex-col gap-3 rounded-xl bg-[var(--color-surface)] p-4">
-          <p className="text-center text-sm">
-            Du er allerede i et spil som{" "}
-            <strong>{existingSession.playerName}</strong>
-          </p>
-          <button
-            onClick={() => navigate(`/play/${existingSession.roomCode}`)}
-            className="rounded-lg bg-[var(--color-primary)] p-3 font-bold transition-transform hover:scale-105 active:scale-95"
+      <AnimatePresence>
+        {existingSession && !dismissedRejoin ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="card-glow flex w-full max-w-xs flex-col gap-3 rounded-xl bg-[var(--color-surface)] p-4"
           >
-            Vend tilbage ({existingSession.roomCode})
-          </button>
-          <button
-            onClick={() => setDismissedRejoin(true)}
-            className="text-sm text-[var(--color-text-muted)] underline"
-          >
-            Deltag i et nyt spil i stedet
-          </button>
-        </div>
-      ) : null}
+            <p className="text-center text-sm">
+              Du er allerede i et spil som{" "}
+              <strong className="text-[var(--color-primary-light)]">{existingSession.playerName}</strong>
+            </p>
+            <button
+              onClick={() => navigate(`/play/${existingSession.roomCode}`)}
+              className="rounded-xl bg-[var(--color-primary)] p-3 font-bold transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              Vend tilbage ({existingSession.roomCode})
+            </button>
+            <button
+              onClick={() => setDismissedRejoin(true)}
+              className="text-sm text-[var(--color-text-muted)] underline underline-offset-4 cursor-pointer"
+            >
+              Deltag i et nyt spil i stedet
+            </button>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
-      <form
+      <motion.form
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
         onSubmit={handleJoin}
         className="flex w-full max-w-xs flex-col gap-4"
       >
@@ -77,7 +93,7 @@ export function JoinPage() {
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z]/g, ""))}
           placeholder={da.enterCode}
-          className="rounded-xl bg-[var(--color-surface)] p-4 text-center text-3xl font-mono uppercase tracking-[0.3em] placeholder:text-[var(--color-text-muted)] placeholder:text-base placeholder:tracking-normal"
+          className="rounded-xl bg-[var(--color-surface)] p-4 text-center font-display text-3xl font-bold uppercase tracking-[0.3em] placeholder:text-[var(--color-text-muted)] placeholder:text-base placeholder:tracking-normal placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 transition-shadow"
           autoComplete="off"
           autoFocus
         />
@@ -87,52 +103,70 @@ export function JoinPage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={da.enterName}
-          className="rounded-xl bg-[var(--color-surface)] p-4 text-center text-xl placeholder:text-[var(--color-text-muted)]"
+          className="rounded-xl bg-[var(--color-surface)] p-4 text-center text-xl placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 transition-shadow"
           autoComplete="off"
         />
-        {name.trim() ? (
-          <div>
-            <p className="mb-2 text-center text-xs text-[var(--color-text-muted)]">
-              Vælg avatar (valgfrit)
-            </p>
-            <div className="grid grid-cols-6 gap-2">
-              {AVATARS.map((avatar) => (
-                <button
-                  key={avatar.name}
-                  type="button"
-                  onClick={() =>
-                    setSelectedAvatar(
-                      selectedAvatar === avatar.name ? null : avatar.name,
-                    )
-                  }
-                  className={`rounded-lg p-1 transition-transform hover:scale-110 active:scale-95 cursor-pointer ${
-                    avatar.name === selectedAvatar
-                      ? "ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/20"
-                      : "bg-[var(--color-surface)]"
-                  }`}
-                >
-                  <img
-                    src={avatar.src}
-                    alt={avatar.name}
-                    className="h-10 w-10 rounded-md object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : null}
+
+        <AnimatePresence>
+          {name.trim() ? (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <p className="mb-2 text-center text-xs font-medium text-[var(--color-text-muted)]">
+                Vælg avatar (valgfrit)
+              </p>
+              <div className="grid grid-cols-6 gap-2">
+                {AVATARS.map((avatar) => (
+                  <button
+                    key={avatar.name}
+                    type="button"
+                    onClick={() =>
+                      setSelectedAvatar(
+                        selectedAvatar === avatar.name ? null : avatar.name,
+                      )
+                    }
+                    className={`rounded-lg p-1 transition-all hover:scale-110 active:scale-95 cursor-pointer ${
+                      avatar.name === selectedAvatar
+                        ? "ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/20 scale-105"
+                        : "bg-[var(--color-surface)]"
+                    }`}
+                  >
+                    <img
+                      src={avatar.src}
+                      alt={avatar.name}
+                      className="h-10 w-10 rounded-md object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
 
         {error ? (
-          <p className="text-center text-sm text-red-400">{error}</p>
+          <motion.p
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-center text-sm font-medium text-[var(--color-danger)]"
+          >
+            {error}
+          </motion.p>
         ) : null}
-        <button
+
+        <motion.button
           type="submit"
           disabled={code.length !== 4 || !name.trim() || joining}
-          className="rounded-xl bg-[var(--color-primary)] p-4 text-xl font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+          whileHover={code.length === 4 && name.trim() ? { scale: 1.03 } : undefined}
+          whileTap={code.length === 4 && name.trim() ? { scale: 0.97 } : undefined}
+          className="rounded-xl bg-[var(--color-primary)] p-4 text-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          style={code.length === 4 && name.trim() ? { boxShadow: "0 0 20px #8b6eff30" } : undefined}
         >
           {joining ? "..." : da.join}
-        </button>
-      </form>
+        </motion.button>
+      </motion.form>
     </div>
   );
 }

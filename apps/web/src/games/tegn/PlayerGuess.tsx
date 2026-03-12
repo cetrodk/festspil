@@ -16,26 +16,24 @@ export default function PlayerGuess({ room, sessionId }: PhaseComponentProps) {
 
   const phaseData = room.phaseData ?? {};
   const isArtist = phaseData.isArtist;
-  const artistName = phaseData.currentArtistName ?? "???";
 
   const handleTick = useCallback((s: number) => {
     if (s <= 5 && s > 0) sfxUrgent();
   }, []);
 
-  // Artist sees a waiting screen
   if (isArtist) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
         <motion.div
           animate={{ y: [0, -8, 0] }}
           transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-          className="text-5xl"
+          className="text-6xl"
         >
           ✏️
         </motion.div>
-        <p className="text-2xl font-bold">{da.tegn.youAreTheArtist}</p>
+        <p className="font-display text-2xl font-bold">{da.tegn.youAreTheArtist}</p>
         <p className="text-[var(--color-text-muted)]">{da.tegn.watchThemGuess}</p>
-        <div className="text-4xl font-mono text-[var(--color-primary)]">
+        <div className="text-4xl font-mono font-bold text-[var(--color-primary)]">
           <CountdownTimer deadline={room.phaseDeadline ?? null} />
         </div>
       </div>
@@ -72,8 +70,8 @@ export default function PlayerGuess({ room, sessionId }: PhaseComponentProps) {
         >
           ✓
         </motion.div>
-        <p className="text-2xl font-bold">{da.waiting}</p>
-        <div className="text-4xl font-mono text-[var(--color-primary)]">
+        <p className="font-display text-2xl font-bold">{da.waiting}</p>
+        <div className="text-4xl font-mono font-bold text-[var(--color-primary)]">
           <CountdownTimer deadline={room.phaseDeadline ?? null} />
         </div>
       </div>
@@ -82,7 +80,7 @@ export default function PlayerGuess({ room, sessionId }: PhaseComponentProps) {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-4">
-      <div className="text-4xl font-mono text-[var(--color-primary)]">
+      <div className="text-4xl font-mono font-bold text-[var(--color-primary)]">
         <CountdownTimer
           deadline={room.phaseDeadline ?? null}
           onTick={handleTick}
@@ -92,7 +90,7 @@ export default function PlayerGuess({ room, sessionId }: PhaseComponentProps) {
       <motion.p
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-sm text-center text-xl font-bold"
+        className="max-w-sm text-center font-display text-xl font-bold"
       >
         {da.tegn.whatIsBeingDrawn}
       </motion.p>
@@ -104,17 +102,17 @@ export default function PlayerGuess({ room, sessionId }: PhaseComponentProps) {
           value={guess}
           onChange={(e) => { setGuess(e.target.value); setError(""); }}
           placeholder={da.tegn.guess}
-          className="rounded-xl bg-[var(--color-surface)] p-4 text-center text-lg placeholder:text-[var(--color-text-muted)]"
+          className="rounded-xl bg-[var(--color-surface)] p-4 text-center text-lg placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50"
           autoComplete="off"
           autoFocus
         />
         {error ? (
-          <p className="text-center text-sm text-red-400">{error}</p>
+          <p className="text-center text-sm font-medium text-[var(--color-danger)]">{error}</p>
         ) : null}
         <button
           type="submit"
           disabled={!guess.trim()}
-          className="rounded-xl bg-[var(--color-primary)] p-4 text-xl font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+          className="rounded-xl bg-[var(--color-primary)] p-4 text-xl font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-40 cursor-pointer"
         >
           {da.submit}
         </button>

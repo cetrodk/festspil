@@ -27,8 +27,7 @@ export function DrawingDisplay({ data, className = "" }: Props) {
 
   return (
     <div
-      className={`rounded-xl bg-[var(--color-surface)] ${className}`}
-      style={{ aspectRatio: "4 / 3" }}
+      className={`rounded-xl bg-[var(--color-surface)] aspect-[4/3] ${className}`}
     >
       <svg
         viewBox={`0 0 ${VIEWBOX_WIDTH} ${viewBoxHeight}`}

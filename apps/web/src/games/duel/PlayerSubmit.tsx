@@ -42,8 +42,8 @@ export default function PlayerSubmit({ room, sessionId }: PhaseComponentProps) {
         >
           ✓
         </motion.div>
-        <p className="text-2xl font-bold">{da.waiting}</p>
-        <div className="text-4xl font-mono text-[var(--color-primary)]">
+        <p className="font-display text-2xl font-bold">{da.waiting}</p>
+        <div className="text-4xl font-mono font-bold text-[var(--color-primary)]">
           <CountdownTimer deadline={room.phaseDeadline ?? null} />
         </div>
       </div>
@@ -52,7 +52,7 @@ export default function PlayerSubmit({ room, sessionId }: PhaseComponentProps) {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-4">
-      <div className="text-4xl font-mono text-[var(--color-primary)]">
+      <div className="text-4xl font-mono font-bold text-[var(--color-primary)]">
         <CountdownTimer
           deadline={room.phaseDeadline ?? null}
           onTick={handleTick}
@@ -62,7 +62,7 @@ export default function PlayerSubmit({ room, sessionId }: PhaseComponentProps) {
       <motion.p
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-sm text-center text-xl font-bold"
+        className="max-w-sm text-center font-display text-xl font-bold"
       >
         {phaseData.promptText}
       </motion.p>
@@ -74,14 +74,14 @@ export default function PlayerSubmit({ room, sessionId }: PhaseComponentProps) {
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           placeholder={da.duel.writeAnswer}
-          className="rounded-xl bg-[var(--color-surface)] p-4 text-center text-lg placeholder:text-[var(--color-text-muted)]"
+          className="rounded-xl bg-[var(--color-surface)] p-4 text-center text-lg placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50"
           autoComplete="off"
           autoFocus
         />
         <button
           type="submit"
           disabled={!answer.trim()}
-          className="rounded-xl bg-[var(--color-primary)] p-4 text-xl font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+          className="rounded-xl bg-[var(--color-primary)] p-4 text-xl font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-40 cursor-pointer"
         >
           {da.submit}
         </button>

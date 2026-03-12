@@ -1,27 +1,163 @@
 @import "tailwindcss";
 
 :root {
-  --color-primary: #6c5ce7;
-  --color-primary-light: #a29bfe;
-  --color-accent: #fd79a8;
-  --color-bg: #0a0a1a;
-  --color-surface: #1a1a2e;
-  --color-text: #eee;
-  --color-text-muted: #888;
+  /* Core palette — warm dark with energetic accents */
+  --color-primary: #8b6eff;
+  --color-primary-light: #b9a4ff;
+  --color-accent: #f472b6;
+  --color-bg: #0d0b1a;
+  --color-bg-warm: #13101f;
+  --color-surface: #1e1a36;
+  --color-surface-light: #2a2448;
+  --color-text: #f5f3ff;
+  --color-text-muted: #b8b0d4;
+
+  /* Game-specific accent colors */
+  --color-duel: #60a5fa;
+  --color-duel-glow: #3b82f620;
+  --color-bluff: #fbbf24;
+  --color-bluff-glow: #f59e0b20;
+  --color-tegn: #f472b6;
+  --color-tegn-glow: #ec489920;
+
+  /* Status */
+  --color-success: #34d399;
+  --color-danger: #f87171;
+  --color-warning: #fbbf24;
+
+  /* Fonts */
+  --font-display: "Fredoka", sans-serif;
+  --font-body: "Nunito", sans-serif;
 }
 
 body {
   margin: 0;
   background-color: var(--color-bg);
   color: var(--color-text);
-  font-family:
-    "Inter",
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* Ambient background glow */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, #8b6eff08, transparent),
+    radial-gradient(ellipse 60% 50% at 80% 80%, #f472b608, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Display font for headings */
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Glowing room code effect */
+.glow-text {
+  text-shadow:
+    0 0 20px var(--color-primary),
+    0 0 60px #8b6eff40;
+}
+
+/* Animated gradient border for cards */
+.card-glow {
+  position: relative;
+  overflow: hidden;
+}
+.card-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    #8b6eff30,
+    transparent 40%,
+    transparent 60%,
+    #f472b630
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Pulse animation for waiting states */
+@keyframes gentle-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+.animate-gentle-pulse {
+  animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+/* Float animation for decorative elements */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Timer urgency pulse */
+@keyframes urgency {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); color: var(--color-danger); }
+}
+.animate-urgency {
+  animation: urgency 0.5s ease-in-out infinite;
+}
+
+/* Subtle noise texture overlay */
+.noise-bg {
+  position: relative;
+}
+.noise-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 1;
+}
+
+/* Custom range slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: var(--color-surface-light);
+  border-radius: 3px;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--color-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 8px #8b6eff60;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--color-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 8px #8b6eff60;
 }

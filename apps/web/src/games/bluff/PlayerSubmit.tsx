@@ -51,7 +51,7 @@ export default function PlayerSubmit({ room, sessionId }: PhaseComponentProps) {
         >
           ✓
         </motion.div>
-        <p className="text-2xl font-bold">{da.waiting}</p>
+        <p className="font-display text-2xl font-bold">{da.waiting}</p>
         {myAnswer ? (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -65,7 +65,7 @@ export default function PlayerSubmit({ room, sessionId }: PhaseComponentProps) {
             <p className="text-lg font-semibold">{myAnswer}</p>
           </motion.div>
         ) : null}
-        <div className="text-4xl font-mono text-[var(--color-primary)]">
+        <div className="text-4xl font-mono font-bold text-[var(--color-primary)]">
           <CountdownTimer deadline={room.phaseDeadline ?? null} />
         </div>
       </div>
@@ -74,7 +74,7 @@ export default function PlayerSubmit({ room, sessionId }: PhaseComponentProps) {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-4">
-      <div className="text-4xl font-mono text-[var(--color-primary)]">
+      <div className="text-4xl font-mono font-bold text-[var(--color-primary)]">
         <CountdownTimer
           deadline={room.phaseDeadline ?? null}
           onTick={handleTick}
@@ -84,7 +84,7 @@ export default function PlayerSubmit({ room, sessionId }: PhaseComponentProps) {
       <motion.p
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-sm text-center text-xl font-bold"
+        className="max-w-sm text-center font-display text-xl font-bold"
       >
         {phaseData.promptText}
       </motion.p>
@@ -97,23 +97,23 @@ export default function PlayerSubmit({ room, sessionId }: PhaseComponentProps) {
             value={answer}
             onChange={(e) => { setAnswer(e.target.value); setError(""); }}
             placeholder={da.bluff.writeFake}
-            className="w-full rounded-xl bg-[var(--color-surface)] p-4 text-center text-lg placeholder:text-[var(--color-text-muted)]"
+            className="w-full rounded-xl bg-[var(--color-surface)] p-4 text-center text-lg placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50"
             autoComplete="off"
             autoFocus
           />
           {answer.length > 40 ? (
-            <p className={`mt-1 text-right text-xs ${answer.length > 72 ? "text-red-400" : "text-[var(--color-text-muted)]"}`}>
+            <p className={`mt-1 text-right text-xs ${answer.length > 72 ? "text-[var(--color-danger)]" : "text-[var(--color-text-muted)]"}`}>
               {answer.length}/80
             </p>
           ) : null}
         </div>
         {error ? (
-          <p className="text-center text-sm text-red-400">{error}</p>
+          <p className="text-center text-sm font-medium text-[var(--color-danger)]">{error}</p>
         ) : null}
         <button
           type="submit"
           disabled={!answer.trim()}
-          className="rounded-xl bg-[var(--color-primary)] p-4 text-xl font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+          className="rounded-xl bg-[var(--color-primary)] p-4 text-xl font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-40 cursor-pointer"
         >
           {da.submit}
         </button>

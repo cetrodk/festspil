@@ -19,6 +19,18 @@ const TIMER_OPTIONS = [
   { key: "guessTime", label: "Gættetid", defaultMs: 45_000, min: 15, max: 90 },
 ] as const;
 
+const GAME_OPTIONS = [
+  { id: "duel", icon: "⚔️", color: "var(--color-duel)" },
+  { id: "bluff", icon: "🎭", color: "var(--color-bluff)" },
+  { id: "tegn", icon: "🎨", color: "var(--color-tegn)" },
+] as const;
+
+function getGameMeta(gameType: string) {
+  return GAME_OPTIONS.find((g) => g.id === gameType) ?? GAME_OPTIONS[0];
+}
+
+/* ── Settings Overlay ──────────────────────────────────── */
+
 function HostSettingsOverlay({
   room,
   sessionId,
@@ -56,10 +68,10 @@ function HostSettingsOverlay({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm rounded-2xl bg-[var(--color-bg)] p-6 shadow-2xl border border-[var(--color-surface)]"
+        className="card-glow w-full max-w-sm rounded-2xl bg-[var(--color-bg-warm)] p-6 shadow-2xl"
       >
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold">Indstillinger</h3>
+          <h3 className="font-display text-xl font-bold">Indstillinger</h3>
           <button
             onClick={onClose}
             className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-2xl leading-none cursor-pointer"
@@ -75,8 +87,8 @@ function HostSettingsOverlay({
             return (
               <div key={key}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium">{label}</span>
-                  <span className="text-sm font-mono text-[var(--color-primary)]">
+                  <span className="text-sm font-semibold">{label}</span>
+                  <span className="text-sm font-mono font-bold text-[var(--color-primary-light)]">
                     {currentSec}s
                   </span>
                 </div>
@@ -86,7 +98,7 @@ function HostSettingsOverlay({
                   max={max}
                   value={currentSec}
                   onChange={(e) => handleChange(key, Number(e.target.value))}
-                  className="w-full accent-[var(--color-primary)] cursor-pointer"
+                  className="w-full cursor-pointer"
                 />
                 <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
                   <span>{min}s</span>
@@ -100,12 +112,10 @@ function HostSettingsOverlay({
         {room.status !== "lobby" ? (
           <button
             onClick={() => {
-              if (confirm("Er du sikker? Spillet nulstilles til lobbyen.")) {
-                restartGame({ roomId: room._id, hostId: sessionId });
-                onClose();
-              }
+              restartGame({ roomId: room._id, hostId: sessionId });
+              onClose();
             }}
-            className="mt-6 w-full rounded-xl border border-red-500/30 p-3 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+            className="mt-6 w-full rounded-xl border border-[var(--color-danger)]/30 p-3 text-sm font-bold text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-colors cursor-pointer"
           >
             Genstart spil
           </button>
@@ -114,6 +124,109 @@ function HostSettingsOverlay({
     </motion.div>
   );
 }
+
+/* ── Host Toolbar (persistent during gameplay) ─────────── */
+
+function HostToolbar({
+  room,
+  sessionId,
+  onSettings,
+}: {
+  room: any;
+  sessionId: string;
+  onSettings: () => void;
+}) {
+  const hostAdvance = useMutation(api.game.hostAdvance);
+  const gameMeta = getGameMeta(room.gameType);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between gap-4 px-4 py-2 bg-[var(--color-bg)]/80 backdrop-blur-md border-b border-white/5"
+    >
+      {/* Left: game type + room code */}
+      <div className="flex items-center gap-3">
+        <span className="text-lg">{gameMeta.icon}</span>
+        <span
+          className="font-mono text-sm font-bold tracking-widest"
+          style={{ color: gameMeta.color }}
+        >
+          {room.code}
+        </span>
+        {room.roundNumber != null && (
+          <span className="text-xs text-[var(--color-text-muted)]">
+            R{room.roundNumber}/{room.totalRounds}
+          </span>
+        )}
+      </div>
+
+      {/* Right: controls */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => hostAdvance({ roomId: room._id, hostId: sessionId })}
+          className="rounded-lg bg-[var(--color-surface-light)] px-3 py-1.5 text-xs font-bold text-[var(--color-text)] hover:bg-[var(--color-primary)]/20 hover:text-[var(--color-primary-light)] transition-colors cursor-pointer"
+          title="Spring videre"
+        >
+          Skip ⏭
+        </button>
+        <button
+          onClick={onSettings}
+          className="rounded-lg bg-[var(--color-surface-light)] p-1.5 text-lg hover:bg-[var(--color-primary)]/20 transition-colors cursor-pointer"
+          title="Indstillinger"
+        >
+          ⚙
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ── Game Selector (lobby only) ────────────────────────── */
+
+function GameSelector({
+  currentGameType,
+  roomId,
+  sessionId,
+}: {
+  currentGameType: string;
+  roomId: any;
+  sessionId: string;
+}) {
+  const changeGameType = useMutation(api.rooms.changeGameType);
+
+  return (
+    <div className="flex gap-2">
+      {GAME_OPTIONS.map((game) => {
+        const isActive = game.id === currentGameType;
+        const gameInfo = game.id === "duel" ? da.duel : game.id === "bluff" ? da.bluff : da.tegn;
+        return (
+          <motion.button
+            key={game.id}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              if (!isActive) {
+                changeGameType({ roomId, hostId: sessionId, gameType: game.id });
+              }
+            }}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all cursor-pointer ${
+              isActive
+                ? "bg-[var(--color-surface-light)] ring-2"
+                : "bg-[var(--color-surface)] opacity-60 hover:opacity-100"
+            }`}
+            style={isActive ? { borderColor: game.color, ringColor: game.color, "--tw-ring-color": game.color } as any : undefined}
+          >
+            <span className="text-lg">{game.icon}</span>
+            <span>{gameInfo.name}</span>
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── Main Host View ────────────────────────────────────── */
 
 export function HostView() {
   const { code } = useParams<{ code: string }>();
@@ -125,12 +238,18 @@ export function HostView() {
   if (!room) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-[var(--color-text-muted)]">Indlæser...</p>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-[var(--color-text-muted)] animate-gentle-pulse"
+        >
+          Indlæser...
+        </motion.p>
       </div>
     );
   }
 
-  // Phase routing: if game is playing, show the game phase component
+  // ── Playing ──
   if (room.status === "playing" && room.currentPhase) {
     const components = gameComponents[room.gameType];
     const basePhase = room.currentPhase.split("_")[0];
@@ -138,19 +257,12 @@ export function HostView() {
 
     if (PhaseComponent) {
       return (
-        <div className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
-          <div className="absolute top-4 right-4 flex items-center gap-4">
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="text-3xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
-              title="Indstillinger"
-            >
-              ⚙
-            </button>
-            <span className="font-mono text-sm text-[var(--color-text-muted)]">
-              {room.code}
-            </span>
-          </div>
+        <div className="flex min-h-screen flex-col items-center justify-center gap-8 p-8 pt-16">
+          <HostToolbar
+            room={room}
+            sessionId={sessionId}
+            onSettings={() => setSettingsOpen(true)}
+          />
           <AnimatePresence>
             {settingsOpen ? (
               <HostSettingsOverlay
@@ -171,7 +283,7 @@ export function HostView() {
             >
               <Suspense
                 fallback={
-                  <div className="text-[var(--color-text-muted)]">
+                  <div className="text-[var(--color-text-muted)] animate-gentle-pulse">
                     Indlæser...
                   </div>
                 }
@@ -185,17 +297,21 @@ export function HostView() {
     }
   }
 
+  // ── Finished ──
   if (room.status === "finished") {
     return <FinishedScreen room={room} sessionId={sessionId} />;
   }
 
-  // Lobby view
+  // ── Lobby ──
+  const gameMeta = getGameMeta(room.gameType);
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
+    <div className="relative flex min-h-screen flex-col items-center justify-center gap-8 p-8">
+      {/* Settings button */}
       <div className="absolute top-4 right-4">
         <button
           onClick={() => setSettingsOpen(true)}
-          className="text-3xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
+          className="rounded-xl bg-[var(--color-surface)] p-2 text-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-light)] transition-all cursor-pointer"
           title="Indstillinger"
         >
           ⚙
@@ -210,52 +326,98 @@ export function HostView() {
           />
         ) : null}
       </AnimatePresence>
-      <p className="text-sm uppercase tracking-widest text-[var(--color-text-muted)]">
-        {da.roomCode}
-      </p>
-      <div className="text-8xl font-black tracking-[0.2em] font-mono">
-        {room.code}
-      </div>
 
-      <p className="text-lg text-[var(--color-text-muted)]">
-        Gå til <span className="font-bold text-[var(--color-text)]">/play</span>{" "}
-        og indtast koden
-      </p>
+      {/* Room code */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: "spring", stiffness: 200 }}
+        className="text-center"
+      >
+        <p className="text-sm font-semibold uppercase tracking-widest text-[var(--color-text-muted)]">
+          {da.roomCode}
+        </p>
+        <div className="mt-2 font-display text-8xl font-bold tracking-[0.2em] glow-text">
+          {room.code}
+        </div>
+        <p className="mt-3 text-lg text-[var(--color-text-muted)]">
+          Gå til <span className="font-bold text-[var(--color-text)]">/play</span>{" "}
+          og indtast koden
+        </p>
+      </motion.div>
 
-      <div className="w-full max-w-md">
+      {/* Game selector */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+      >
+        <GameSelector
+          currentGameType={room.gameType}
+          roomId={room._id}
+          sessionId={sessionId}
+        />
+      </motion.div>
+
+      {/* Player list */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="w-full max-w-md"
+      >
         <p className="mb-4 text-center text-sm text-[var(--color-text-muted)]">
           {room.players.length} {da.playersJoined}
         </p>
         <ul className="flex flex-col gap-2">
-          {room.players.map((player: any) => (
-            <li
-              key={player._id}
-              className="flex items-center gap-3 rounded-xl bg-[var(--color-surface)] p-3"
-            >
-              <GameAvatar name={player.name} avatarColor={player.avatarColor} avatarImage={player.avatarImage} />
-              <span className="font-semibold">{player.name}</span>
-              {!player.isConnected ? (
-                <span className="ml-auto text-xs text-[var(--color-text-muted)]">
-                  afbrudt
-                </span>
-              ) : null}
-            </li>
-          ))}
+          <AnimatePresence>
+            {room.players.map((player: any, i: number) => (
+              <motion.li
+                key={player._id}
+                initial={{ opacity: 0, x: -20, scale: 0.9 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                transition={{ delay: i * 0.05, type: "spring", stiffness: 300 }}
+                className="flex items-center gap-3 rounded-xl bg-[var(--color-surface)] p-3"
+              >
+                <GameAvatar name={player.name} avatarColor={player.avatarColor} avatarImage={player.avatarImage} />
+                <span className="font-semibold">{player.name}</span>
+                {!player.isConnected ? (
+                  <span className="ml-auto text-xs text-[var(--color-text-muted)]">
+                    afbrudt
+                  </span>
+                ) : null}
+              </motion.li>
+            ))}
+          </AnimatePresence>
         </ul>
-      </div>
+      </motion.div>
 
-      <button
+      {/* Start button */}
+      <motion.button
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35, type: "spring" }}
+        whileHover={room.players.length >= 3 ? { scale: 1.05 } : undefined}
+        whileTap={room.players.length >= 3 ? { scale: 0.95 } : undefined}
         disabled={room.players.length < 3}
         onClick={() => startGame({ roomId: room._id, hostId: sessionId })}
-        className="rounded-xl bg-[var(--color-primary)] px-12 py-4 text-2xl font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
+        className="rounded-2xl px-14 py-5 text-2xl font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+        style={{
+          backgroundColor: gameMeta.color,
+          boxShadow: room.players.length >= 3
+            ? `0 0 30px ${gameMeta.color}40, 0 4px 20px ${gameMeta.color}20`
+            : undefined,
+        }}
       >
         {room.players.length < 3
           ? `${da.needMorePlayers} (${room.players.length}/3)`
           : da.startGame}
-      </button>
+      </motion.button>
     </div>
   );
 }
+
+/* ── Finished Screen ───────────────────────────────────── */
 
 function FinishedScreen({ room, sessionId }: { room: any; sessionId: string }) {
   const restartGame = useMutation(api.game.restartGame);
@@ -269,12 +431,9 @@ function FinishedScreen({ room, sessionId }: { room: any; sessionId: string }) {
   const rest = players.filter((p: any) => p.score < topScore);
 
   useEffect(() => {
-    // Initial burst
     const end = Date.now() + 3000;
-
     sfxFanfare();
-
-    const colors = ["#7c3aed", "#f43f5e", "#f59e0b", "#10b981", "#3b82f6"];
+    const colors = ["#8b6eff", "#f472b6", "#fbbf24", "#34d399", "#60a5fa"];
 
     function frame() {
       confetti({
@@ -291,72 +450,95 @@ function FinishedScreen({ room, sessionId }: { room: any; sessionId: string }) {
         origin: { x: 1, y: 0.7 },
         colors,
       });
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
+      if (Date.now() < end) requestAnimationFrame(frame);
     }
-
     frame();
   }, []);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
-      <h2 className="text-3xl font-bold">{da.gameOver}</h2>
+      <motion.h2
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: "spring", stiffness: 200 }}
+        className="font-display text-4xl font-bold"
+      >
+        {da.gameOver}
+      </motion.h2>
 
       {isTie ? (
-        <div className="text-center">
-          <p className="mb-4 text-lg text-[var(--color-text-muted)]">
-            Uafgjort!
-          </p>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <p className="mb-4 text-lg text-[var(--color-text-muted)]">Uafgjort!</p>
           <div className="flex justify-center gap-6">
             {winners.map((w: any) => (
               <div key={w._id} className="text-center">
-                <div className="mx-auto"><GameAvatar name={w.name} avatarColor={w.avatarColor} avatarImage={w.avatarImage} className="h-20 w-20" /></div>
-                <p className="mt-2 text-2xl font-black">{w.name}</p>
+                <div className="mx-auto">
+                  <GameAvatar name={w.name} avatarColor={w.avatarColor} avatarImage={w.avatarImage} className="h-20 w-20" />
+                </div>
+                <p className="mt-2 font-display text-2xl font-bold">{w.name}</p>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-lg text-[var(--color-text-muted)]">
-            {topScore} point
-          </p>
-        </div>
+          <p className="mt-3 text-lg text-[var(--color-text-muted)]">{topScore} point</p>
+        </motion.div>
       ) : (
-        <div className="text-center">
-          <div className="mx-auto"><GameAvatar name={winners[0].name} avatarColor={winners[0].avatarColor} avatarImage={winners[0].avatarImage} className="h-20 w-20" /></div>
-          <p className="mt-3 text-4xl font-black">{winners[0].name}</p>
-          <p className="text-lg text-[var(--color-text-muted)]">
-            {topScore} point
-          </p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <div className="mx-auto">
+            <GameAvatar name={winners[0].name} avatarColor={winners[0].avatarColor} avatarImage={winners[0].avatarImage} className="h-24 w-24" />
+          </div>
+          <p className="mt-3 font-display text-5xl font-bold">{winners[0].name}</p>
+          <p className="mt-1 text-lg text-[var(--color-text-muted)]">{topScore} point</p>
+        </motion.div>
       )}
 
       {rest.length > 0 && (
-        <div className="w-full max-w-lg flex flex-col gap-2">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="w-full max-w-lg flex flex-col gap-2"
+        >
           {rest.map((player: any, i: number) => (
-            <div
+            <motion.div
               key={player._id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 + i * 0.1 }}
               className="flex items-center gap-4 rounded-xl bg-[var(--color-surface)] p-3"
             >
-              <span className="text-lg font-black text-[var(--color-text-muted)] w-6">
+              <span className="text-lg font-bold text-[var(--color-text-muted)] w-6">
                 {winners.length + i + 1}
               </span>
               <GameAvatar name={player.name} avatarColor={player.avatarColor} avatarImage={player.avatarImage} />
               <span className="flex-1 font-semibold">{player.name}</span>
-              <span className="font-bold text-[var(--color-primary)]">
+              <span className="font-bold text-[var(--color-primary-light)]">
                 {player.score}
               </span>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
 
-      <button
+      <motion.button
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => restartGame({ roomId: room._id, hostId: sessionId })}
-        className="rounded-xl bg-[var(--color-primary)] px-10 py-4 text-xl font-bold transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+        className="rounded-2xl bg-[var(--color-primary)] px-10 py-4 text-xl font-bold cursor-pointer"
+        style={{ boxShadow: "0 0 30px #8b6eff40" }}
       >
         {da.playAgain}
-      </button>
+      </motion.button>
     </div>
   );
 }

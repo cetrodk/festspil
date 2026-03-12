@@ -17,26 +17,25 @@ export default function HostScores({ room, sessionId }: PhaseComponentProps) {
   const isLastRound = (room.roundNumber ?? 1) >= (room.totalRounds ?? 1);
 
   useEffect(() => {
-    // Staggered score sounds
     players.forEach((_, i) => {
       setTimeout(sfxScore, i * 150 + 100);
     });
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-8">
+    <div className="flex flex-col items-center gap-10">
       <motion.h2
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-3xl font-bold"
+        className="font-display text-5xl font-bold"
       >
         {da.scores}
       </motion.h2>
-      <p className="text-sm text-[var(--color-text-muted)]">
+      <p className="text-base text-[var(--color-text-muted)]">
         {da.round} {room.roundNumber} {da.of} {room.totalRounds}
       </p>
 
-      <div className="w-full max-w-lg flex flex-col gap-3">
+      <div className="w-full max-w-3xl flex flex-col gap-4">
         {players.map((player: any, i: number) => (
           <motion.div
             key={player._id}
@@ -44,7 +43,7 @@ export default function HostScores({ room, sessionId }: PhaseComponentProps) {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.15, type: "spring", stiffness: 200 }}
-            className={`flex items-center gap-4 rounded-xl p-4 ${
+            className={`flex items-center gap-5 rounded-2xl p-5 ${
               i === 0
                 ? "bg-[var(--color-primary)]/10 ring-1 ring-[var(--color-primary)]/30"
                 : "bg-[var(--color-surface)]"
@@ -54,7 +53,7 @@ export default function HostScores({ room, sessionId }: PhaseComponentProps) {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: i * 0.15 + 0.1, type: "spring" }}
-              className={`text-2xl font-black w-8 ${
+              className={`font-display text-3xl font-bold w-10 ${
                 i === 0 ? "text-[var(--color-primary)]" : "text-[var(--color-text-muted)]"
               }`}
             >
@@ -64,14 +63,15 @@ export default function HostScores({ room, sessionId }: PhaseComponentProps) {
               name={player.name}
               avatarColor={player.avatarColor}
               avatarImage={player.avatarImage}
+              className="h-14 w-14"
             />
-            <span className="flex-1 font-semibold">{player.name}</span>
+            <span className="flex-1 text-xl font-semibold">{player.name}</span>
             <motion.span
               key={player.score}
-              initial={{ scale: 1.4, color: "#a78bfa" }}
+              initial={{ scale: 1.4, color: "#b9a4ff" }}
               animate={{ scale: 1, color: "var(--color-primary)" }}
               transition={{ duration: 0.4 }}
-              className="text-2xl font-black"
+              className="font-display text-3xl font-bold"
             >
               {player.score}
             </motion.span>
@@ -87,11 +87,11 @@ export default function HostScores({ room, sessionId }: PhaseComponentProps) {
       >
         <button
           onClick={() => hostAdvance({ roomId: room._id, hostId: sessionId })}
-          className="rounded-xl bg-[var(--color-primary)] px-10 py-4 text-xl font-bold transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+          className="rounded-2xl bg-[var(--color-primary)] px-12 py-5 text-2xl font-bold transition-transform hover:scale-105 active:scale-95 cursor-pointer"
         >
           {isLastRound ? da.gameOver : da.nextRound}
         </button>
-        <span className="text-sm text-[var(--color-text-muted)]">
+        <span className="text-base text-[var(--color-text-muted)]">
           <CountdownTimer deadline={room.phaseDeadline ?? null} />s
         </span>
       </motion.div>
