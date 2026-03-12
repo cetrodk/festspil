@@ -1,10 +1,29 @@
 import { Suspense } from "react";
-import { useParams } from "react-router-dom";
-import { useQuery } from "convex/react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useSessionId } from "@/providers/SessionProvider";
 import { gameComponents } from "@/games/registry";
 import { da } from "@/lib/da";
+
+function LeaveButton({ roomId, sessionId }: { roomId: any; sessionId: string }) {
+  const leaveRoom = useMutation(api.players.leaveRoom);
+  const navigate = useNavigate();
+
+  async function handleLeave() {
+    await leaveRoom({ roomId, sessionId });
+    navigate("/play");
+  }
+
+  return (
+    <button
+      onClick={handleLeave}
+      className="text-sm text-[var(--color-text-muted)] underline cursor-pointer"
+    >
+      Forlad spil
+    </button>
+  );
+}
 
 export function PlayerView() {
   const { code } = useParams<{ code: string }>();
@@ -72,12 +91,10 @@ export function PlayerView() {
             </p>
           </>
         ) : null}
-        <a
-          href="/play"
-          className="rounded-xl bg-[var(--color-primary)] px-8 py-3 font-bold transition-transform hover:scale-105 active:scale-95"
-        >
-          {da.playAgain}
-        </a>
+        <p className="text-sm text-[var(--color-text-muted)]">
+          {da.waitingForHost}
+        </p>
+        <LeaveButton roomId={room._id} sessionId={sessionId} />
       </div>
     );
   }
@@ -120,6 +137,7 @@ export function PlayerView() {
       <p className="text-sm text-[var(--color-text-muted)]">
         {da.waitingForHost}
       </p>
+      <LeaveButton roomId={room._id} sessionId={sessionId} />
     </div>
   );
 }

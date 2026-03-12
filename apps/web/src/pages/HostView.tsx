@@ -60,7 +60,7 @@ export function HostView() {
   }
 
   if (room.status === "finished") {
-    return <FinishedScreen room={room} />;
+    return <FinishedScreen room={room} sessionId={sessionId} />;
   }
 
   // Lobby view
@@ -118,7 +118,8 @@ export function HostView() {
   );
 }
 
-function FinishedScreen({ room }: { room: any }) {
+function FinishedScreen({ room, sessionId }: { room: any; sessionId: string }) {
+  const restartGame = useMutation(api.game.restartGame);
   const players = [...(room.players ?? [])].sort(
     (a: any, b: any) => b.score - a.score,
   );
@@ -226,12 +227,12 @@ function FinishedScreen({ room }: { room: any }) {
         </div>
       )}
 
-      <a
-        href="/"
+      <button
+        onClick={() => restartGame({ roomId: room._id, hostId: sessionId })}
         className="rounded-xl bg-[var(--color-primary)] px-10 py-4 text-xl font-bold transition-transform hover:scale-105 active:scale-95 cursor-pointer"
       >
         {da.playAgain}
-      </a>
+      </button>
     </div>
   );
 }

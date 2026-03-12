@@ -72,6 +72,25 @@ export const joinRoom = mutation({
   },
 });
 
+export const leaveRoom = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    sessionId: v.string(),
+  },
+  handler: async (ctx, { roomId, sessionId }) => {
+    const player = await ctx.db
+      .query("players")
+      .withIndex("by_session_room", (q) =>
+        q.eq("sessionId", sessionId).eq("roomId", roomId),
+      )
+      .first();
+
+    if (!player) return;
+
+    await ctx.db.delete(player._id);
+  },
+});
+
 export const rejoinRoom = query({
   args: { sessionId: v.string() },
   handler: async (ctx, { sessionId }) => {

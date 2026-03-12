@@ -68,6 +68,39 @@ export const hostAdvance = mutation({
   },
 });
 
+export const restartGame = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    hostId: v.string(),
+  },
+  handler: async (ctx, { roomId, hostId }) => {
+    const room = await ctx.db.get(roomId);
+    if (!room) throw new Error("Room not found");
+    if (room.hostId !== hostId) throw new Error("Only the host can restart");
+    if (room.status !== "finished") throw new Error("Game not finished");
+
+    // Reset room to lobby
+    await ctx.db.patch(roomId, {
+      status: "lobby",
+      currentPhase: undefined,
+      phaseData: undefined,
+      phaseDeadline: undefined,
+      roundNumber: undefined,
+      totalRounds: undefined,
+    });
+
+    // Reset all player scores
+    const players = await ctx.db
+      .query("players")
+      .withIndex("by_room", (q) => q.eq("roomId", roomId))
+      .collect();
+
+    await Promise.all(
+      players.map((p) => ctx.db.patch(p._id, { score: 0 })),
+    );
+  },
+});
+
 export const submitAnswer = mutation({
   args: {
     roomId: v.id("rooms"),
