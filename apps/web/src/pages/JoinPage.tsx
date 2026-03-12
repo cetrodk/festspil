@@ -46,13 +46,14 @@ export function JoinPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-4">
-      <motion.h1
+      <motion.a
+        href="/"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="font-display text-5xl font-bold glow-text"
+        className="font-display text-5xl font-bold glow-text cursor-pointer hover:opacity-80 transition-opacity"
       >
         {da.title}
-      </motion.h1>
+      </motion.a>
 
       <AnimatePresence>
         {existingSession && !dismissedRejoin ? (

@@ -9,7 +9,7 @@ import { GameAvatar } from "@/components/GameAvatar";
 import { AvatarPickerModal } from "@/components/AvatarPickerModal";
 import { da } from "@/lib/da";
 
-function LeaveButton({ roomId, sessionId }: { roomId: any; sessionId: string }) {
+function PlayerNav({ roomId, sessionId }: { roomId: any; sessionId: string }) {
   const leaveRoom = useMutation(api.players.leaveRoom);
   const navigate = useNavigate();
 
@@ -19,12 +19,20 @@ function LeaveButton({ roomId, sessionId }: { roomId: any; sessionId: string }) 
   }
 
   return (
-    <button
-      onClick={handleLeave}
-      className="text-sm text-[var(--color-text-muted)] underline underline-offset-4 decoration-[var(--color-text-muted)]/30 hover:decoration-[var(--color-text-muted)] transition-colors cursor-pointer"
-    >
-      Forlad spil
-    </button>
+    <div className="flex items-center gap-4">
+      <a
+        href="/"
+        className="text-sm text-[var(--color-text-muted)] underline underline-offset-4 decoration-[var(--color-text-muted)]/30 hover:decoration-[var(--color-text-muted)] transition-colors"
+      >
+        Forside
+      </a>
+      <button
+        onClick={handleLeave}
+        className="text-sm text-[var(--color-text-muted)] underline underline-offset-4 decoration-[var(--color-text-muted)]/30 hover:decoration-[var(--color-text-muted)] transition-colors cursor-pointer"
+      >
+        Forlad spil
+      </button>
+    </div>
   );
 }
 
@@ -108,7 +116,7 @@ export function PlayerView() {
         <p className="text-sm text-[var(--color-text-muted)] animate-gentle-pulse">
           {da.waitingForHost}
         </p>
-        <LeaveButton roomId={room._id} sessionId={sessionId} />
+        <PlayerNav roomId={room._id} sessionId={sessionId} />
       </div>
     );
   }
@@ -188,7 +196,7 @@ export function PlayerView() {
       <p className="text-sm text-[var(--color-text-muted)] animate-gentle-pulse">
         {da.waitingForHost}
       </p>
-      <LeaveButton roomId={room._id} sessionId={sessionId} />
+      <PlayerNav roomId={room._id} sessionId={sessionId} />
     </div>
   );
 }
