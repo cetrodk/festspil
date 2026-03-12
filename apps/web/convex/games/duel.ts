@@ -1,9 +1,8 @@
-import type { MutationCtx, QueryCtx } from "../_generated/server";
-import type { Doc, Id } from "../_generated/dataModel";
+import type { Id } from "../_generated/dataModel";
 import { registerGameHandlers } from "../gameHandlers";
 
 registerGameHandlers("duel", {
-  async setupRound(ctx, room, players) {
+  async setupRound(ctx, _room, _players) {
     // Pick a random prompt
     const allPrompts = await ctx.db
       .query("prompts")
@@ -59,7 +58,7 @@ registerGameHandlers("duel", {
     });
   },
 
-  async buildVoteData(ctx, room, players) {
+  async buildVoteData(ctx, room, _players) {
     const submissions = await ctx.db
       .query("submissions")
       .withIndex("by_room_round_phase", (q) =>
@@ -70,52 +69,19 @@ registerGameHandlers("duel", {
       )
       .collect();
 
-    // Build matchup pairs (all answers compete, presented as pairs)
-    // Simple approach: create one matchup per pair of adjacent answers
+    // All answers compete in a single pool — everyone votes for their favorite
     const shuffled = [...submissions].sort(() => Math.random() - 0.5);
-    const matchups: Array<{
-      id: string;
-      answers: Array<{ id: string; text: string; playerId: string }>;
-    }> = [];
-
-    for (let i = 0; i < shuffled.length; i += 2) {
-      if (i + 1 < shuffled.length) {
-        matchups.push({
-          id: `matchup-${i}`,
-          answers: [
-            {
-              id: shuffled[i]._id,
-              text: String(shuffled[i].content),
-              playerId: shuffled[i].playerId,
-            },
-            {
-              id: shuffled[i + 1]._id,
-              text: String(shuffled[i + 1].content),
-              playerId: shuffled[i + 1].playerId,
-            },
-          ],
-        });
-      }
-    }
-
-    // If odd number, last person gets added to last matchup
-    if (shuffled.length % 2 === 1 && matchups.length > 0) {
-      const last = shuffled[shuffled.length - 1];
-      matchups[matchups.length - 1].answers.push({
-        id: last._id,
-        text: String(last.content),
-        playerId: last.playerId,
-      });
-    }
+    const answers = shuffled.map((s) => ({
+      id: s._id,
+      text: String(s.content),
+      playerId: s.playerId,
+    }));
 
     return {
       ...room.phaseData,
-      matchups,
+      answers,
       // Anonymized version for players (strip playerIds)
-      matchupsAnonymized: matchups.map((m) => ({
-        id: m.id,
-        answers: m.answers.map((a) => ({ id: a.id, text: a.text })),
-      })),
+      answersAnonymized: answers.map((a) => ({ id: a.id, text: a.text })),
     };
   },
 

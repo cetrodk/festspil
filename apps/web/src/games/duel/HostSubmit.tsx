@@ -1,4 +1,7 @@
+import { useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { CountdownTimer } from "@festspil/ui/CountdownTimer";
+import { sfxTick, sfxUrgent } from "@/lib/sounds";
 import { da } from "@/lib/da";
 import type { PhaseComponentProps } from "../registry";
 
@@ -7,20 +10,30 @@ export default function HostSubmit({ room }: PhaseComponentProps) {
   const submittedCount = room.players?.filter((p: any) => p.hasSubmitted).length ?? 0;
   const totalPlayers = room.players?.length ?? 0;
 
+  const handleTick = useCallback((s: number) => {
+    if (s <= 5 && s > 0) sfxUrgent();
+    else if (s <= 15 && s > 5) sfxTick();
+  }, []);
+
   return (
     <div className="flex flex-col items-center gap-8">
       <div className="text-sm uppercase tracking-widest text-[var(--color-text-muted)]">
         {da.round} {room.roundNumber} {da.of} {room.totalRounds}
       </div>
 
-      <div className="max-w-2xl text-center text-4xl font-bold leading-tight">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-2xl text-center text-4xl font-bold leading-tight"
+      >
         {phaseData.promptText}
-      </div>
+      </motion.div>
 
-      <div className="flex items-center gap-4">
-        <div className="text-6xl font-mono font-bold text-[var(--color-primary)]">
-          <CountdownTimer deadline={room.phaseDeadline ?? null} />
-        </div>
+      <div className="text-6xl font-mono font-bold text-[var(--color-primary)]">
+        <CountdownTimer
+          deadline={room.phaseDeadline ?? null}
+          onTick={handleTick}
+        />
       </div>
 
       <div className="text-lg text-[var(--color-text-muted)]">
@@ -28,23 +41,34 @@ export default function HostSubmit({ room }: PhaseComponentProps) {
       </div>
 
       <div className="flex flex-wrap justify-center gap-2">
-        {room.players?.map((p: any) => (
-          <div
-            key={p._id}
-            className="flex items-center gap-2 rounded-full px-3 py-1"
-            style={{
-              backgroundColor: p.hasSubmitted
-                ? p.avatarColor
-                : "var(--color-surface)",
-              opacity: p.hasSubmitted ? 1 : 0.4,
-            }}
-          >
-            <span className="text-sm font-medium text-white">{p.name}</span>
-            {p.hasSubmitted ? (
-              <span className="text-xs">✓</span>
-            ) : null}
-          </div>
-        ))}
+        <AnimatePresence>
+          {room.players?.map((p: any) => (
+            <motion.div
+              key={p._id}
+              layout
+              animate={{
+                backgroundColor: p.hasSubmitted
+                  ? p.avatarColor
+                  : "var(--color-surface)",
+                opacity: p.hasSubmitted ? 1 : 0.4,
+                scale: p.hasSubmitted ? [1, 1.15, 1] : 1,
+              }}
+              transition={{ duration: 0.3 }}
+              className="flex items-center gap-2 rounded-full px-3 py-1"
+            >
+              <span className="text-sm font-medium text-white">{p.name}</span>
+              {p.hasSubmitted ? (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="text-xs"
+                >
+                  ✓
+                </motion.span>
+              ) : null}
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   );

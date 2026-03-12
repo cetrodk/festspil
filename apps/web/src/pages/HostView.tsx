@@ -1,10 +1,12 @@
 import { Suspense, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
+import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { api } from "../../convex/_generated/api";
 import { useSessionId } from "@/providers/SessionProvider";
 import { gameComponents } from "@/games/registry";
+import { sfxFanfare } from "@/lib/sounds";
 import { da } from "@/lib/da";
 
 export function HostView() {
@@ -32,13 +34,26 @@ export function HostView() {
           <div className="absolute top-4 right-4 font-mono text-sm text-[var(--color-text-muted)]">
             {room.code}
           </div>
-          <Suspense
-            fallback={
-              <div className="text-[var(--color-text-muted)]">Indlæser...</div>
-            }
-          >
-            <PhaseComponent room={room} sessionId={sessionId} />
-          </Suspense>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={room.currentPhase + "-" + room.roundNumber}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="flex w-full flex-col items-center gap-8"
+            >
+              <Suspense
+                fallback={
+                  <div className="text-[var(--color-text-muted)]">
+                    Indlæser...
+                  </div>
+                }
+              >
+                <PhaseComponent room={room} sessionId={sessionId} />
+              </Suspense>
+            </motion.div>
+          </AnimatePresence>
         </div>
       );
     }
@@ -116,6 +131,8 @@ function FinishedScreen({ room }: { room: any }) {
   useEffect(() => {
     // Initial burst
     const end = Date.now() + 3000;
+
+    sfxFanfare();
 
     const colors = ["#7c3aed", "#f43f5e", "#f59e0b", "#10b981", "#3b82f6"];
 

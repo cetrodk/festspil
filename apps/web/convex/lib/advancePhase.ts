@@ -1,5 +1,5 @@
 import type { MutationCtx } from "../_generated/server";
-import type { Doc, Id } from "../_generated/dataModel";
+import type { Doc } from "../_generated/dataModel";
 import { internal } from "../_generated/api";
 import { getGameHandlers } from "../gameHandlers";
 

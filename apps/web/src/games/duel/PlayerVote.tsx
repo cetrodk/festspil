@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
+import { motion } from "framer-motion";
 import { api } from "../../../convex/_generated/api";
 import { CountdownTimer } from "@festspil/ui/CountdownTimer";
+import { sfxClick } from "@/lib/sounds";
 import { da } from "@/lib/da";
 import type { PhaseComponentProps } from "../registry";
 
@@ -10,9 +12,10 @@ export default function PlayerVote({ room, sessionId }: PhaseComponentProps) {
   const [voted, setVoted] = useState(false);
 
   const phaseData = room.phaseData ?? {};
-  const matchups = phaseData.matchupsAnonymized ?? [];
+  const answers = phaseData.answersAnonymized ?? [];
 
   async function handleVote(answerId: string) {
+    sfxClick();
     await submitAnswer({
       roomId: room._id,
       sessionId,
@@ -24,6 +27,14 @@ export default function PlayerVote({ room, sessionId }: PhaseComponentProps) {
   if (voted || phaseData.myVote) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200 }}
+          className="text-6xl"
+        >
+          ✓
+        </motion.div>
         <p className="text-2xl font-bold">{da.waiting}</p>
         <div className="text-4xl font-mono text-[var(--color-primary)]">
           <CountdownTimer deadline={room.phaseDeadline ?? null} />
@@ -41,17 +52,18 @@ export default function PlayerVote({ room, sessionId }: PhaseComponentProps) {
       <p className="text-lg font-bold">{da.duel.voteForBest}</p>
 
       <div className="flex w-full max-w-xs flex-col gap-3">
-        {matchups.flatMap((matchup: any) =>
-          matchup.answers.map((answer: any) => (
-            <button
-              key={answer.id}
-              onClick={() => handleVote(answer.id)}
-              className="rounded-xl bg-[var(--color-surface)] p-4 text-lg font-medium transition-transform hover:scale-105 active:scale-95 text-left"
-            >
-              {answer.text}
-            </button>
-          )),
-        )}
+        {answers.map((answer: any, i: number) => (
+          <motion.button
+            key={answer.id}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            onClick={() => handleVote(answer.id)}
+            className="rounded-xl bg-[var(--color-surface)] p-4 text-lg font-medium transition-transform hover:scale-105 active:scale-95 text-left cursor-pointer"
+          >
+            {answer.text}
+          </motion.button>
+        ))}
       </div>
     </div>
   );

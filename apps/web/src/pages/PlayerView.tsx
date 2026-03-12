@@ -43,12 +43,38 @@ export function PlayerView() {
   }
 
   if (room.status === "finished") {
+    const currentPlayer = room.players?.find(
+      (p: any) => p._id === room.currentPlayerId,
+    );
+    const sorted = [...(room.players ?? [])].sort(
+      (a: any, b: any) => b.score - a.score,
+    );
+    const rank = sorted.findIndex(
+      (p: any) => p._id === room.currentPlayerId,
+    ) + 1;
+
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-4">
         <p className="text-3xl font-bold">{da.gameOver}</p>
+        {currentPlayer ? (
+          <>
+            <div
+              className="flex h-20 w-20 items-center justify-center rounded-full text-white text-2xl font-bold"
+              style={{ backgroundColor: currentPlayer.avatarColor }}
+            >
+              {currentPlayer.name.slice(0, 2).toUpperCase()}
+            </div>
+            <p className="text-4xl font-black text-[var(--color-primary)]">
+              #{rank}
+            </p>
+            <p className="text-xl text-[var(--color-text-muted)]">
+              {currentPlayer.score} point
+            </p>
+          </>
+        ) : null}
         <a
-          href="/"
-          className="rounded-xl bg-[var(--color-primary)] px-8 py-3 font-bold"
+          href="/play"
+          className="rounded-xl bg-[var(--color-primary)] px-8 py-3 font-bold transition-transform hover:scale-105 active:scale-95"
         >
           {da.playAgain}
         </a>
