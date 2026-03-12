@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { Swords, Drama, Paintbrush, Phone } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { useSessionId } from "@/providers/SessionProvider";
 import { da } from "@/lib/da";
@@ -10,30 +11,34 @@ const GAMES = [
   {
     id: "duel",
     ...da.duel,
-    icon: "⚔️",
+    Icon: Swords,
     color: "var(--color-duel)",
     glow: "var(--color-duel-glow)",
+    textColor: "#fff",
   },
   {
     id: "bluff",
     ...da.bluff,
-    icon: "🎭",
+    Icon: Drama,
     color: "var(--color-bluff)",
     glow: "var(--color-bluff-glow)",
+    textColor: "#0d0b1a",
   },
   {
     id: "tegn",
     ...da.tegn,
-    icon: "🎨",
+    Icon: Paintbrush,
     color: "var(--color-tegn)",
     glow: "var(--color-tegn-glow)",
+    textColor: "#fff",
   },
   {
     id: "telefon",
     ...da.telefon,
-    icon: "📞",
+    Icon: Phone,
     color: "var(--color-telefon)",
     glow: "var(--color-telefon-glow)",
+    textColor: "#0d0b1a",
   },
 ] as const;
 
@@ -121,7 +126,7 @@ function GameGrid({ onSelect }: { onSelect: (game: Game) => void }) {
             className="card-glow group relative flex flex-col items-center gap-2 rounded-2xl bg-[var(--color-surface)] p-5 sm:p-6 cursor-pointer transition-shadow hover:shadow-lg"
             style={{ "--tw-shadow-color": game.glow } as any}
           >
-            <span className="text-4xl sm:text-5xl">{game.icon}</span>
+            <game.Icon className="h-10 w-10 sm:h-12 sm:w-12" style={{ color: game.color }} />
             <span
               className="font-display text-lg font-bold sm:text-xl"
               style={{ color: game.color }}
@@ -174,7 +179,7 @@ function GameDetailSplash({
         transition={{ type: "spring", stiffness: 200 }}
         className="flex flex-col items-center gap-2"
       >
-        <span className="text-7xl">{game.icon}</span>
+        <game.Icon className="h-16 w-16" style={{ color: game.color }} />
         <h2
           className="font-display text-4xl font-bold"
           style={{ color: game.color }}
@@ -229,6 +234,7 @@ function GameDetailSplash({
         className="w-full rounded-2xl py-4 text-xl font-bold cursor-pointer"
         style={{
           backgroundColor: game.color,
+          color: game.textColor,
           boxShadow: `0 0 30px ${game.glow}, 0 4px 20px ${game.glow}`,
         }}
       >

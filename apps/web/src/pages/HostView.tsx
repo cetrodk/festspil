@@ -3,12 +3,15 @@ import { useParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { AnimatePresence, motion } from "framer-motion";
 import confetti from "canvas-confetti";
+import { Swords, Drama, Paintbrush, Phone, Settings, SkipForward } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { useSessionId } from "@/providers/SessionProvider";
 import { gameComponents } from "@/games/registry";
 import { sfxFanfare } from "@/lib/sounds";
 import { GameAvatar } from "@/components/GameAvatar";
 import { da } from "@/lib/da";
+
+const GAME_ICONS = { duel: Swords, bluff: Drama, tegn: Paintbrush, telefon: Phone } as const;
 
 const TIMER_OPTIONS = [
   { key: "submitTime", label: "Svartid", defaultMs: 60_000, min: 15, max: 180 },
@@ -21,10 +24,10 @@ const TIMER_OPTIONS = [
 ] as const;
 
 const GAME_OPTIONS = [
-  { id: "duel", icon: "⚔️", color: "var(--color-duel)" },
-  { id: "bluff", icon: "🎭", color: "var(--color-bluff)" },
-  { id: "tegn", icon: "🎨", color: "var(--color-tegn)" },
-  { id: "telefon", icon: "📞", color: "var(--color-telefon)" },
+  { id: "duel", color: "var(--color-duel)", textColor: "#fff" },
+  { id: "bluff", color: "var(--color-bluff)", textColor: "#0d0b1a" },
+  { id: "tegn", color: "var(--color-tegn)", textColor: "#fff" },
+  { id: "telefon", color: "var(--color-telefon)", textColor: "#0d0b1a" },
 ] as const;
 
 function getGameMeta(gameType: string) {
@@ -149,7 +152,7 @@ function HostToolbar({
     >
       {/* Left: game type + room code */}
       <div className="flex items-center gap-3">
-        <span className="text-lg">{gameMeta.icon}</span>
+        {(() => { const Icon = GAME_ICONS[room.gameType as keyof typeof GAME_ICONS]; return Icon ? <Icon className="h-5 w-5" style={{ color: gameMeta.color }} /> : null; })()}
         <span
           className="font-mono text-sm font-bold tracking-widest"
           style={{ color: gameMeta.color }}
@@ -170,14 +173,14 @@ function HostToolbar({
           className="rounded-lg bg-[var(--color-surface-light)] px-3 py-1.5 text-xs font-bold text-[var(--color-text)] hover:bg-[var(--color-primary)]/20 hover:text-[var(--color-primary-light)] transition-colors cursor-pointer"
           title="Spring videre"
         >
-          Skip ⏭
+          <span className="flex items-center gap-1">Skip <SkipForward className="h-3.5 w-3.5" /></span>
         </button>
         <button
           onClick={onSettings}
-          className="rounded-lg bg-[var(--color-surface-light)] p-1.5 text-lg hover:bg-[var(--color-primary)]/20 transition-colors cursor-pointer"
+          className="rounded-lg bg-[var(--color-surface-light)] p-1.5 hover:bg-[var(--color-primary)]/20 transition-colors cursor-pointer"
           title="Indstillinger"
         >
-          ⚙
+          <Settings className="h-5 w-5" />
         </button>
       </div>
     </motion.div>
@@ -198,7 +201,7 @@ function GameInfoCard({ gameType }: { gameType: string }) {
   return (
     <div className="w-full max-w-md rounded-2xl bg-[var(--color-surface)] p-5">
       <div className="flex items-center gap-3 mb-3">
-        <span className="text-3xl">{game.icon}</span>
+        {(() => { const Icon = GAME_ICONS[gameType as keyof typeof GAME_ICONS]; return Icon ? <Icon className="h-8 w-8" style={{ color: game.color }} /> : null; })()}
         <h3
           className="font-display text-2xl font-bold"
           style={{ color: game.color }}
@@ -316,10 +319,10 @@ export function HostView() {
         </a>
         <button
           onClick={() => setSettingsOpen(true)}
-          className="rounded-xl bg-[var(--color-surface)] p-2 text-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-light)] transition-all cursor-pointer"
+          className="rounded-xl bg-[var(--color-surface)] p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-light)] transition-all cursor-pointer"
           title="Indstillinger"
         >
-          ⚙
+          <Settings className="h-5 w-5" />
         </button>
       </div>
       <AnimatePresence>
@@ -413,6 +416,7 @@ export function HostView() {
         className="rounded-2xl px-14 py-5 text-2xl font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         style={{
           backgroundColor: gameMeta.color,
+          color: gameMeta.textColor,
           boxShadow: room.players.length >= 3
             ? `0 0 30px ${gameMeta.color}40, 0 4px 20px ${gameMeta.color}20`
             : undefined,
@@ -544,7 +548,7 @@ function FinishedScreen({ room, sessionId }: { room: any; sessionId: string }) {
         whileTap={{ scale: 0.95 }}
         onClick={() => restartGame({ roomId: room._id, hostId: sessionId })}
         className="rounded-2xl bg-[var(--color-primary)] px-10 py-4 text-xl font-bold cursor-pointer"
-        style={{ boxShadow: "0 0 30px #8b6eff40" }}
+        style={{ boxShadow: "0 0 30px color-mix(in srgb, var(--color-primary) 25%, transparent)" }}
       >
         {da.playAgain}
       </motion.button>

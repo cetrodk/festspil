@@ -10,7 +10,7 @@
   --color-surface: #1e1a36;
   --color-surface-light: #2a2448;
   --color-text: #f5f3ff;
-  --color-text-muted: #b8b0d4;
+  --color-text-muted: #c5bfdd;
 
   /* Game-specific accent colors */
   --color-duel: #60a5fa;
@@ -50,8 +50,8 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 20% 10%, #8b6eff08, transparent),
-    radial-gradient(ellipse 60% 50% at 80% 80%, #f472b608, transparent);
+    radial-gradient(ellipse 80% 60% at 20% 10%, #8b6eff18, transparent),
+    radial-gradient(ellipse 60% 50% at 80% 80%, #f472b618, transparent);
   pointer-events: none;
   z-index: 0;
 }
@@ -65,7 +65,7 @@ body::before {
 .glow-text {
   text-shadow:
     0 0 20px var(--color-primary),
-    0 0 60px #8b6eff40;
+    0 0 60px color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
 
 /* Animated gradient border for cards */
@@ -81,10 +81,10 @@ body::before {
   padding: 1px;
   background: linear-gradient(
     135deg,
-    #8b6eff30,
+    color-mix(in srgb, var(--color-primary) 19%, transparent),
     transparent 40%,
     transparent 60%,
-    #f472b630
+    color-mix(in srgb, var(--color-accent) 19%, transparent)
   );
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
@@ -152,7 +152,7 @@ input[type="range"]::-webkit-slider-thumb {
   background: var(--color-primary);
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 0 8px #8b6eff60;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 38%, transparent);
 }
 input[type="range"]::-moz-range-thumb {
   width: 18px;
@@ -161,5 +161,24 @@ input[type="range"]::-moz-range-thumb {
   border-radius: 50%;
   cursor: pointer;
   border: none;
-  box-shadow: 0 0 8px #8b6eff60;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 38%, transparent);
+}
+
+/* Global focus-visible ring for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-gentle-pulse,
+  .animate-float,
+  .animate-urgency {
+    animation: none;
+  }
+
+  * {
+    transition-duration: 0.01ms !important;
+  }
 }

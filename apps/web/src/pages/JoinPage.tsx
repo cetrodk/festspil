@@ -160,7 +160,7 @@ export function JoinPage() {
           whileHover={code.length === 4 && name.trim() ? { scale: 1.03 } : undefined}
           whileTap={code.length === 4 && name.trim() ? { scale: 0.97 } : undefined}
           className="rounded-xl bg-[var(--color-primary)] p-4 text-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-          style={code.length === 4 && name.trim() ? { boxShadow: "0 0 20px #8b6eff30" } : undefined}
+          style={code.length === 4 && name.trim() ? { boxShadow: "0 0 20px color-mix(in srgb, var(--color-primary) 19%, transparent)" } : undefined}
         >
           {joining ? "..." : da.join}
         </motion.button>

@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Phone } from "lucide-react";
 import { CountdownTimer } from "@festspil/ui/CountdownTimer";
 import { sfxTick, sfxUrgent } from "@/lib/sounds";
 import { da } from "@/lib/da";
@@ -21,7 +22,7 @@ export default function HostWrite({ room }: PhaseComponentProps) {
         animate={{ opacity: 1, y: 0 }}
         className="font-display text-6xl font-bold"
       >
-        📞 {da.telefon.name}
+        <Phone className="inline h-12 w-12 mr-2" style={{ color: "var(--color-telefon)" }} /> {da.telefon.name}
       </motion.h2>
 
       <p className="text-2xl text-[var(--color-text-muted)]">

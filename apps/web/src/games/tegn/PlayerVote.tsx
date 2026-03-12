@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { motion } from "framer-motion";
+import { Paintbrush } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { CountdownTimer } from "@festspil/ui/CountdownTimer";
 import { sfxClick } from "@/lib/sounds";
@@ -35,7 +36,7 @@ export default function PlayerVote({ room, sessionId }: PhaseComponentProps) {
           transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
           className="text-5xl"
         >
-          🎨
+          <Paintbrush className="h-12 w-12" style={{ color: "var(--color-tegn)" }} />
         </motion.div>
         <p className="font-display text-2xl font-bold">{da.tegn.artistWaiting}</p>
         <div className="text-4xl font-mono font-bold text-[var(--color-primary)]">
