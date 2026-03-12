@@ -1,0 +1,5 @@
+{
+  "name": "@festspil/typescript-config",
+  "private": true,
+  "type": "module"
+}

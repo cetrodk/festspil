@@ -1,0 +1,32 @@
+{
+  "name": "@festspil/ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./CountdownTimer": {
+      "types": "./src/CountdownTimer.tsx",
+      "default": "./src/CountdownTimer.tsx"
+    },
+    "./PlayerAvatar": {
+      "types": "./src/PlayerAvatar.tsx",
+      "default": "./src/PlayerAvatar.tsx"
+    },
+    "./PlayerList": {
+      "types": "./src/PlayerList.tsx",
+      "default": "./src/PlayerList.tsx"
+    },
+    "./RoomCodeDisplay": {
+      "types": "./src/RoomCodeDisplay.tsx",
+      "default": "./src/RoomCodeDisplay.tsx"
+    }
+  },
+  "dependencies": {
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@festspil/typescript-config": "workspace:*",
+    "@types/react": "^19.2.7",
+    "typescript": "~5.9.3"
+  }
+}
