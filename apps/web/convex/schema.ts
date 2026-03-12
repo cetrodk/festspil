@@ -27,6 +27,7 @@ export default defineSchema({
     name: v.string(),
     sessionId: v.string(),
     avatarColor: v.string(),
+    avatarImage: v.optional(v.string()),
     score: v.float64(),
     isConnected: v.boolean(),
     lastSeen: v.float64(),

@@ -1,10 +1,51 @@
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useSessionId } from "@/providers/SessionProvider";
 import { gameComponents } from "@/games/registry";
+import { AVATARS } from "@/lib/avatars";
+import { GameAvatar } from "@/components/GameAvatar";
 import { da } from "@/lib/da";
+
+function AvatarPickerGrid({
+  roomId,
+  sessionId,
+  currentImage,
+  onClose,
+}: {
+  roomId: any;
+  sessionId: string;
+  currentImage?: string;
+  onClose: () => void;
+}) {
+  const changeAvatar = useMutation(api.players.changeAvatar);
+
+  return (
+    <div className="grid grid-cols-6 gap-2 rounded-lg bg-[var(--color-surface)] p-3">
+      {AVATARS.map((avatar) => (
+        <button
+          key={avatar.name}
+          onClick={() => {
+            changeAvatar({ roomId, sessionId, avatarImage: avatar.name });
+            onClose();
+          }}
+          className={`rounded-lg p-1 transition-transform hover:scale-110 active:scale-95 cursor-pointer ${
+            avatar.name === currentImage
+              ? "ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/20"
+              : ""
+          }`}
+        >
+          <img
+            src={avatar.src}
+            alt={avatar.name}
+            className="h-10 w-10 rounded-md object-cover"
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function LeaveButton({ roomId, sessionId }: { roomId: any; sessionId: string }) {
   const leaveRoom = useMutation(api.players.leaveRoom);
@@ -32,6 +73,8 @@ export function PlayerView() {
     api.rooms.getRoomForPlayer,
     code ? { code, sessionId } : "skip",
   );
+
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
 
   if (!room) {
     return (
@@ -61,10 +104,11 @@ export function PlayerView() {
     }
   }
 
+  const currentPlayer = room.players?.find(
+    (p: any) => p._id === room.currentPlayerId,
+  );
+
   if (room.status === "finished") {
-    const currentPlayer = room.players?.find(
-      (p: any) => p._id === room.currentPlayerId,
-    );
     const sorted = [...(room.players ?? [])].sort(
       (a: any, b: any) => b.score - a.score,
     );
@@ -77,12 +121,7 @@ export function PlayerView() {
         <p className="text-3xl font-bold">{da.gameOver}</p>
         {currentPlayer ? (
           <>
-            <div
-              className="flex h-20 w-20 items-center justify-center rounded-full text-white text-2xl font-bold"
-              style={{ backgroundColor: currentPlayer.avatarColor }}
-            >
-              {currentPlayer.name.slice(0, 2).toUpperCase()}
-            </div>
+            <GameAvatar name={currentPlayer.name} avatarColor={currentPlayer.avatarColor} avatarImage={currentPlayer.avatarImage} className="h-20 w-20" />
             <p className="text-4xl font-black text-[var(--color-primary)]">
               #{rank}
             </p>
@@ -112,25 +151,37 @@ export function PlayerView() {
           {room.players.length} {da.playersJoined}
         </p>
         <ul className="flex flex-col gap-2">
-          {room.players.map((player: any) => (
-            <li
-              key={player._id}
-              className="flex items-center gap-3 rounded-lg bg-[var(--color-surface)] p-2"
-            >
-              <div
-                className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-xs"
-                style={{ backgroundColor: player.avatarColor }}
-              >
-                {player.name.slice(0, 2).toUpperCase()}
-              </div>
-              <span className="text-sm font-medium">{player.name}</span>
-              {player._id === room.currentPlayerId ? (
-                <span className="ml-auto text-xs text-[var(--color-primary-light)]">
-                  dig
-                </span>
-              ) : null}
-            </li>
-          ))}
+          {room.players.map((player: any) => {
+            const isMe = player._id === room.currentPlayerId;
+            return (
+              <li key={player._id}>
+                <div
+                  onClick={isMe ? () => setAvatarPickerOpen(!avatarPickerOpen) : undefined}
+                  className={`flex items-center gap-3 rounded-lg bg-[var(--color-surface)] p-2 ${
+                    isMe ? "cursor-pointer ring-1 ring-[var(--color-primary)]/30 hover:ring-[var(--color-primary)]/60 transition-all" : ""
+                  }`}
+                >
+                  <GameAvatar name={player.name} avatarColor={player.avatarColor} avatarImage={player.avatarImage} className="h-8 w-8" />
+                  <span className="text-sm font-medium">{player.name}</span>
+                  {isMe ? (
+                    <span className="ml-auto text-xs text-[var(--color-primary-light)]">
+                      dig
+                    </span>
+                  ) : null}
+                </div>
+                {isMe && avatarPickerOpen ? (
+                  <div className="mt-2">
+                    <AvatarPickerGrid
+                      roomId={room._id}
+                      sessionId={sessionId}
+                      currentImage={currentPlayer?.avatarImage}
+                      onClose={() => setAvatarPickerOpen(false)}
+                    />
+                  </div>
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
       </div>
 

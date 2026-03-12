@@ -149,6 +149,7 @@ registerGameHandlers("duel", {
       playerId: string;
       playerName: string;
       avatarColor: string;
+      avatarImage?: string;
       votes: number;
     }> = [];
 
@@ -170,6 +171,7 @@ registerGameHandlers("duel", {
         playerId: sub.playerId,
         playerName: player?.name ?? "???",
         avatarColor: player?.avatarColor ?? "#888",
+        avatarImage: player?.avatarImage,
         votes: voteCount,
       });
     }

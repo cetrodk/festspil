@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../convex/_generated/api";
 import { useSessionId } from "@/providers/SessionProvider";
+import { AVATARS } from "@/lib/avatars";
 import { da } from "@/lib/da";
 
 export function JoinPage() {
@@ -15,6 +16,7 @@ export function JoinPage() {
   const [error, setError] = useState("");
   const [joining, setJoining] = useState(false);
   const [dismissedRejoin, setDismissedRejoin] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
 
   // Check for existing active session
   const existingSession = useQuery(api.players.rejoinRoom, { sessionId });
@@ -30,6 +32,7 @@ export function JoinPage() {
         code: code.toUpperCase(),
         name: name.trim(),
         sessionId,
+        ...(selectedAvatar ? { avatarImage: selectedAvatar } : {}),
       });
       navigate(`/play/${result.code}`);
     } catch (err) {
@@ -87,6 +90,38 @@ export function JoinPage() {
           className="rounded-xl bg-[var(--color-surface)] p-4 text-center text-xl placeholder:text-[var(--color-text-muted)]"
           autoComplete="off"
         />
+        {name.trim() ? (
+          <div>
+            <p className="mb-2 text-center text-xs text-[var(--color-text-muted)]">
+              Vælg avatar (valgfrit)
+            </p>
+            <div className="grid grid-cols-6 gap-2">
+              {AVATARS.map((avatar) => (
+                <button
+                  key={avatar.name}
+                  type="button"
+                  onClick={() =>
+                    setSelectedAvatar(
+                      selectedAvatar === avatar.name ? null : avatar.name,
+                    )
+                  }
+                  className={`rounded-lg p-1 transition-transform hover:scale-110 active:scale-95 cursor-pointer ${
+                    avatar.name === selectedAvatar
+                      ? "ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/20"
+                      : "bg-[var(--color-surface)]"
+                  }`}
+                >
+                  <img
+                    src={avatar.src}
+                    alt={avatar.name}
+                    className="h-10 w-10 rounded-md object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         {error ? (
           <p className="text-center text-sm text-red-400">{error}</p>
         ) : null}

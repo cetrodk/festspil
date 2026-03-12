@@ -7,6 +7,7 @@ import { api } from "../../convex/_generated/api";
 import { useSessionId } from "@/providers/SessionProvider";
 import { gameComponents } from "@/games/registry";
 import { sfxFanfare } from "@/lib/sounds";
+import { GameAvatar } from "@/components/GameAvatar";
 import { da } from "@/lib/da";
 
 export function HostView() {
@@ -14,6 +15,7 @@ export function HostView() {
   const sessionId = useSessionId();
   const room = useQuery(api.rooms.getRoom, code ? { code } : "skip");
   const startGame = useMutation(api.game.startGame);
+  const restartGame = useMutation(api.game.restartGame);
 
   if (!room) {
     return (
@@ -31,8 +33,20 @@ export function HostView() {
     if (PhaseComponent) {
       return (
         <div className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
-          <div className="absolute top-4 right-4 font-mono text-sm text-[var(--color-text-muted)]">
-            {room.code}
+          <div className="absolute top-4 right-4 flex items-center gap-4">
+            <button
+              onClick={() => {
+                if (confirm("Er du sikker? Spillet nulstilles til lobbyen.")) {
+                  restartGame({ roomId: room._id, hostId: sessionId });
+                }
+              }}
+              className="text-xs text-[var(--color-text-muted)] hover:text-red-400 transition-colors cursor-pointer"
+            >
+              Genstart
+            </button>
+            <span className="font-mono text-sm text-[var(--color-text-muted)]">
+              {room.code}
+            </span>
           </div>
           <AnimatePresence mode="wait">
             <motion.div
@@ -88,12 +102,7 @@ export function HostView() {
               key={player._id}
               className="flex items-center gap-3 rounded-xl bg-[var(--color-surface)] p-3"
             >
-              <div
-                className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                style={{ backgroundColor: player.avatarColor }}
-              >
-                {player.name.slice(0, 2).toUpperCase()}
-              </div>
+              <GameAvatar name={player.name} avatarColor={player.avatarColor} avatarImage={player.avatarImage} />
               <span className="font-semibold">{player.name}</span>
               {!player.isConnected ? (
                 <span className="ml-auto text-xs text-[var(--color-text-muted)]">
@@ -173,12 +182,7 @@ function FinishedScreen({ room, sessionId }: { room: any; sessionId: string }) {
           <div className="flex justify-center gap-6">
             {winners.map((w: any) => (
               <div key={w._id} className="text-center">
-                <div
-                  className="mx-auto flex h-20 w-20 items-center justify-center rounded-full text-white text-2xl font-bold"
-                  style={{ backgroundColor: w.avatarColor }}
-                >
-                  {w.name.slice(0, 2).toUpperCase()}
-                </div>
+                <div className="mx-auto"><GameAvatar name={w.name} avatarColor={w.avatarColor} avatarImage={w.avatarImage} className="h-20 w-20" /></div>
                 <p className="mt-2 text-2xl font-black">{w.name}</p>
               </div>
             ))}
@@ -189,12 +193,7 @@ function FinishedScreen({ room, sessionId }: { room: any; sessionId: string }) {
         </div>
       ) : (
         <div className="text-center">
-          <div
-            className="mx-auto flex h-20 w-20 items-center justify-center rounded-full text-white text-2xl font-bold"
-            style={{ backgroundColor: winners[0].avatarColor }}
-          >
-            {winners[0].name.slice(0, 2).toUpperCase()}
-          </div>
+          <div className="mx-auto"><GameAvatar name={winners[0].name} avatarColor={winners[0].avatarColor} avatarImage={winners[0].avatarImage} className="h-20 w-20" /></div>
           <p className="mt-3 text-4xl font-black">{winners[0].name}</p>
           <p className="text-lg text-[var(--color-text-muted)]">
             {topScore} point
@@ -212,12 +211,7 @@ function FinishedScreen({ room, sessionId }: { room: any; sessionId: string }) {
               <span className="text-lg font-black text-[var(--color-text-muted)] w-6">
                 {winners.length + i + 1}
               </span>
-              <div
-                className="flex h-8 w-8 items-center justify-center rounded-full text-white font-bold text-xs"
-                style={{ backgroundColor: player.avatarColor }}
-              >
-                {player.name.slice(0, 2).toUpperCase()}
-              </div>
+              <GameAvatar name={player.name} avatarColor={player.avatarColor} avatarImage={player.avatarImage} />
               <span className="flex-1 font-semibold">{player.name}</span>
               <span className="font-bold text-[var(--color-primary)]">
                 {player.score}

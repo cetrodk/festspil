@@ -2,13 +2,21 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAvatarColor } from "./lib/colors";
 
+const AVATAR_IMAGES = [
+  "alien", "bits", "book", "cat", "clock", "cyberpunk", "cyborg",
+  "diamond", "dragon", "eagle", "gargoyle", "hospital", "keys",
+  "monkey", "orc", "phoenix", "potion", "robot", "rocket", "squid",
+  "staff", "swords", "wolf",
+];
+
 export const joinRoom = mutation({
   args: {
     code: v.string(),
     name: v.string(),
     sessionId: v.string(),
+    avatarImage: v.optional(v.string()),
   },
-  handler: async (ctx, { code, name, sessionId }) => {
+  handler: async (ctx, { code, name, sessionId, avatarImage }) => {
     const trimmedName = name.trim().slice(0, 16);
     if (!trimmedName) {
       throw new Error("Navn er påkrævet");
@@ -63,12 +71,35 @@ export const joinRoom = mutation({
       name: trimmedName,
       sessionId,
       avatarColor: getAvatarColor(playerIndex),
+      avatarImage: (avatarImage && AVATAR_IMAGES.includes(avatarImage)) ? avatarImage : AVATAR_IMAGES[playerIndex % AVATAR_IMAGES.length],
       score: 0,
       isConnected: true,
       lastSeen: Date.now(),
     });
 
     return { playerId, code: room.code };
+  },
+});
+
+export const changeAvatar = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    sessionId: v.string(),
+    avatarImage: v.string(),
+  },
+  handler: async (ctx, { roomId, sessionId, avatarImage }) => {
+    if (!AVATAR_IMAGES.includes(avatarImage)) return;
+
+    const player = await ctx.db
+      .query("players")
+      .withIndex("by_session_room", (q) =>
+        q.eq("sessionId", sessionId).eq("roomId", roomId),
+      )
+      .first();
+
+    if (!player) return;
+
+    await ctx.db.patch(player._id, { avatarImage });
   },
 });
 

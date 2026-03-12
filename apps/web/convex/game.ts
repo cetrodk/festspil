@@ -77,7 +77,6 @@ export const restartGame = mutation({
     const room = await ctx.db.get(roomId);
     if (!room) throw new Error("Room not found");
     if (room.hostId !== hostId) throw new Error("Only the host can restart");
-    if (room.status !== "finished") throw new Error("Game not finished");
 
     // Reset room to lobby
     await ctx.db.patch(roomId, {
@@ -95,9 +94,16 @@ export const restartGame = mutation({
       .withIndex("by_room", (q) => q.eq("roomId", roomId))
       .collect();
 
-    await Promise.all(
-      players.map((p) => ctx.db.patch(p._id, { score: 0 })),
-    );
+    // Delete all submissions for this room
+    const submissions = await ctx.db
+      .query("submissions")
+      .withIndex("by_room_round_phase", (q) => q.eq("roomId", roomId))
+      .collect();
+
+    await Promise.all([
+      ...players.map((p) => ctx.db.patch(p._id, { score: 0 })),
+      ...submissions.map((s) => ctx.db.delete(s._id)),
+    ]);
   },
 });
 

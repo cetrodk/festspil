@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { api } from "../../../convex/_generated/api";
 import { CountdownTimer } from "@festspil/ui/CountdownTimer";
 import { sfxReveal, sfxFanfare } from "@/lib/sounds";
+import { GameAvatar } from "@/components/GameAvatar";
 import { da } from "@/lib/da";
 import type { PhaseComponentProps } from "../registry";
 
@@ -48,12 +49,12 @@ export default function HostReveal({ room, sessionId }: PhaseComponentProps) {
                   : "bg-[var(--color-surface)]"
               }`}
             >
-              <div
-                className="flex h-12 w-12 items-center justify-center rounded-full text-white font-bold shrink-0"
-                style={{ backgroundColor: result.avatarColor }}
-              >
-                {result.playerName.slice(0, 2).toUpperCase()}
-              </div>
+              <GameAvatar
+                name={result.playerName}
+                avatarColor={result.avatarColor}
+                avatarImage={result.avatarImage}
+                className="h-12 w-12"
+              />
               <div className="flex-1 min-w-0">
                 <p className="text-xl font-semibold">{result.text}</p>
                 <p className="text-sm text-[var(--color-text-muted)]">

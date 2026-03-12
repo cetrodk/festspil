@@ -155,7 +155,10 @@ export const getRoomForPlayer = query({
         : undefined;
       filteredPhaseData = {
         ...room.phaseData,
-        answersAnonymized: answers.filter((a) => a.id !== myAnswerId),
+        answersAnonymized: answers.map((a) => ({
+          ...a,
+          isOwn: a.id === myAnswerId,
+        })),
         myVote: myVote?.content ?? null,
       };
     }
@@ -175,6 +178,7 @@ export const getRoomForPlayer = query({
         _id: p._id,
         name: p.name,
         avatarColor: p.avatarColor,
+        avatarImage: p.avatarImage,
         score: p.score,
         isConnected: p.isConnected,
         hasSubmitted: submissions.some((s) => s.playerId === p._id),

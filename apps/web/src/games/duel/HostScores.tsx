@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { api } from "../../../convex/_generated/api";
 import { CountdownTimer } from "@festspil/ui/CountdownTimer";
 import { sfxScore } from "@/lib/sounds";
+import { GameAvatar } from "@/components/GameAvatar";
 import { da } from "@/lib/da";
 import type { PhaseComponentProps } from "../registry";
 
@@ -59,12 +60,11 @@ export default function HostScores({ room, sessionId }: PhaseComponentProps) {
             >
               {i + 1}
             </motion.span>
-            <div
-              className="flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-sm shrink-0"
-              style={{ backgroundColor: player.avatarColor }}
-            >
-              {player.name.slice(0, 2).toUpperCase()}
-            </div>
+            <GameAvatar
+              name={player.name}
+              avatarColor={player.avatarColor}
+              avatarImage={player.avatarImage}
+            />
             <span className="flex-1 font-semibold">{player.name}</span>
             <motion.span
               key={player.score}
