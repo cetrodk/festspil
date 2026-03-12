@@ -32,10 +32,11 @@ interface Props {
   showControls?: boolean;
 }
 
-const COLORS = ["#ffffff", "var(--color-primary)"];
+const COLORS = ["#ffffff", "#000000", "#ef4444", "#f59e0b", "#22c55e", "#3b82f6", "var(--color-primary)"];
 const SIZES = [
-  { value: 6, dot: 6 },
-  { value: 16, dot: 16 },
+  { value: 4, dot: 4 },
+  { value: 10, dot: 10 },
+  { value: 20, dot: 20 },
 ];
 
 export const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(
