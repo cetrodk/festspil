@@ -45,7 +45,13 @@ export function JoinPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-4">
+    <div className="relative flex min-h-screen flex-col items-center justify-center gap-6 p-4">
+      <a
+        href="/"
+        className="absolute top-4 left-4 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+      >
+        ← {da.back}
+      </a>
       <motion.a
         href="/"
         initial={{ opacity: 0, y: -10 }}
