@@ -85,4 +85,22 @@ export const da = {
     artistWaiting: "De andre stemmer nu — vent her",
     drawingSecretWords: "Alle tegner deres hemmelige ord...",
   },
+
+  telefon: {
+    name: "Telefon",
+    description: "Skriv, tegn, gæt — se hvad der sker!",
+    writePrompt: "Skriv en sjov sætning",
+    writePlaceholder: "Fx: En hest der læser avisen...",
+    drawThis: "Tegn dette:",
+    guessThis: "Hvad forestiller tegningen?",
+    everyoneIsWriting: "Alle skriver en sætning...",
+    everyoneIsDrawing: "Alle tegner...",
+    everyoneIsGuessing: "Alle gætter...",
+    chain: "Kæde",
+    of: "af",
+    nextStep: "Næste",
+    nextChain: "Næste kæde",
+    original: "Original",
+    matchBonus: "Det matchede originalen!",
+  },
 } as const;

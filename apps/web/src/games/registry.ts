@@ -55,4 +55,18 @@ export const gameComponents: Record<string, GameComponents> = {
       scores: lazy(() => import("./duel/PlayerReveal")),
     },
   },
+  telefon: {
+    host: {
+      write: lazy(() => import("./telefon/HostWrite")),
+      draw: lazy(() => import("./telefon/HostDraw")),
+      guess: lazy(() => import("./telefon/HostGuess")),
+      reveal: lazy(() => import("./telefon/HostReveal")),
+    },
+    player: {
+      write: lazy(() => import("./telefon/PlayerWrite")),
+      draw: lazy(() => import("./telefon/PlayerDraw")),
+      guess: lazy(() => import("./telefon/PlayerGuess")),
+      reveal: lazy(() => import("./telefon/PlayerReveal")),
+    },
+  },
 };

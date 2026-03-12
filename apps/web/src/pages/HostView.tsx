@@ -17,12 +17,14 @@ const TIMER_OPTIONS = [
   { key: "scoresTime", label: "Pointvisning", defaultMs: 8_000, min: 3, max: 20 },
   { key: "drawTime", label: "Tegnetid", defaultMs: 90_000, min: 30, max: 180 },
   { key: "guessTime", label: "Gættetid", defaultMs: 45_000, min: 15, max: 90 },
+  { key: "writeTime", label: "Skrivetid", defaultMs: 60_000, min: 15, max: 120 },
 ] as const;
 
 const GAME_OPTIONS = [
   { id: "duel", icon: "⚔️", color: "var(--color-duel)" },
   { id: "bluff", icon: "🎭", color: "var(--color-bluff)" },
   { id: "tegn", icon: "🎨", color: "var(--color-tegn)" },
+  { id: "telefon", icon: "📞", color: "var(--color-telefon)" },
 ] as const;
 
 function getGameMeta(gameType: string) {
@@ -199,7 +201,7 @@ function GameSelector({
     <div className="flex gap-2">
       {GAME_OPTIONS.map((game) => {
         const isActive = game.id === currentGameType;
-        const gameInfo = game.id === "duel" ? da.duel : game.id === "bluff" ? da.bluff : da.tegn;
+        const gameInfo = game.id === "duel" ? da.duel : game.id === "bluff" ? da.bluff : game.id === "telefon" ? da.telefon : da.tegn;
         return (
           <motion.button
             key={game.id}

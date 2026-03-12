@@ -71,7 +71,7 @@ export const getRoom = query({
     const phase = room.currentPhase;
     const basePhase = phase?.split("_")[0];
     const isSubmittable = phase && room.roundNumber !== undefined &&
-      ["submit", "vote", "draw", "guess"].includes(basePhase ?? "");
+      ["submit", "vote", "draw", "guess", "write"].includes(basePhase ?? "");
 
     if (isSubmittable) {
       const submissions = await ctx.db
@@ -144,7 +144,54 @@ export const getRoomForPlayer = query({
     const phase = room.currentPhase ?? "";
     const basePhase = phase.split("_")[0];
 
-    if (phase === "submit") {
+    if (phase === "write") {
+      // Telefon write phase: only show submission status
+      const mySubmission = submissions.find(
+        (s) => currentPlayer && s.playerId === currentPlayer._id,
+      );
+      filteredPhaseData = {
+        submittedCount: submissions.length,
+        totalPlayers: players.length,
+        mySubmission: mySubmission?.content ?? null,
+      };
+    } else if (basePhase === "draw" && phase !== "draw" && room.gameType === "telefon") {
+      // Telefon draw phase: show only this player's assigned prompt
+      const pd = room.phaseData as any;
+      const myPrompt = currentPlayer
+        ? pd?.assignments?.[currentPlayer._id]?.myPrompt ?? null
+        : null;
+      const mySubmission = submissions.find(
+        (s) => currentPlayer && s.playerId === currentPlayer._id,
+      );
+      filteredPhaseData = {
+        stepIndex: pd?.currentStep ?? 0,
+        totalSteps: pd?.stepCount ?? 1,
+        myPrompt,
+        mySubmission: mySubmission ? true : null,
+        submittedCount: submissions.length,
+        totalPlayers: players.length,
+      };
+    } else if (basePhase === "guess" && phase !== "guess" && room.gameType === "telefon") {
+      // Telefon guess phase: show only this player's assigned drawing
+      const pd = room.phaseData as any;
+      const myDrawingData = currentPlayer
+        ? pd?.assignments?.[currentPlayer._id]?.myDrawingData ?? null
+        : null;
+      const mySubmission = submissions.find(
+        (s) => currentPlayer && s.playerId === currentPlayer._id,
+      );
+      filteredPhaseData = {
+        stepIndex: pd?.currentStep ?? 0,
+        totalSteps: pd?.stepCount ?? 1,
+        myDrawingData,
+        mySubmission: mySubmission?.content ?? null,
+        submittedCount: submissions.length,
+        totalPlayers: players.length,
+      };
+    } else if (phase === "reveal" && room.gameType === "telefon") {
+      // Telefon reveal: all chain data shown
+      filteredPhaseData = room.phaseData;
+    } else if (phase === "submit") {
       // Duel/Bluff: During submit: show prompt but hide all answers
       const mySubmission = submissions.find(
         (s) => currentPlayer && s.playerId === currentPlayer._id,

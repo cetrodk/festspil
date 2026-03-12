@@ -8,11 +8,12 @@ import { advancePhaseInternal, getPhaseDuration } from "./lib/advancePhase";
 import "./games/duel";
 import "./games/bluff";
 import "./games/tegn";
+import "./games/telefon";
 
 /** Check if a phase accepts player submissions */
 function isSubmittablePhase(phase: string): boolean {
   const base = phase.split("_")[0];
-  return ["submit", "vote", "draw", "guess"].includes(base);
+  return ["submit", "vote", "draw", "guess", "write"].includes(base);
 }
 
 /** Check if a phase is a vote-type phase */
@@ -41,9 +42,9 @@ export const startGame = mutation({
 
     if (players.length < 3) throw new Error("Need at least 3 players");
 
-    const isTegn = room.gameType === "tegn";
-    const totalRounds = isTegn ? 1 : Math.min(players.length, 3);
-    const firstPhase = isTegn ? "draw" : "submit";
+    const isSingleRound = room.gameType === "tegn" || room.gameType === "telefon";
+    const totalRounds = isSingleRound ? 1 : Math.min(players.length, 3);
+    const firstPhase = room.gameType === "tegn" ? "draw" : room.gameType === "telefon" ? "write" : "submit";
 
     const handlers = getGameHandlers(room.gameType);
     const roundData = await handlers.setupRound(
@@ -96,6 +97,7 @@ export const updateSettings = mutation({
       scoresTime: v.optional(v.float64()),
       drawTime: v.optional(v.float64()),
       guessTime: v.optional(v.float64()),
+      writeTime: v.optional(v.float64()),
     }),
   },
   handler: async (ctx, { roomId, hostId, settings }) => {
@@ -145,6 +147,47 @@ export const restartGame = mutation({
       ...players.map((p) => ctx.db.patch(p._id, { score: 0 })),
       ...submissions.map((s) => ctx.db.delete(s._id)),
     ]);
+  },
+});
+
+export const telefonAdvanceReveal = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    hostId: v.string(),
+  },
+  handler: async (ctx, { roomId, hostId }) => {
+    const room = await ctx.db.get(roomId);
+    if (!room || room.gameType !== "telefon") return;
+    if (room.hostId !== hostId) throw new Error("Only host can advance");
+    if (room.currentPhase !== "reveal") return;
+
+    const phaseData = (room.phaseData ?? {}) as any;
+    const chains: any[] = phaseData.chains ?? [];
+    const chainCount = chains.length;
+    let chainIndex: number = phaseData.revealChainIndex ?? 0;
+    let stepIndex: number = phaseData.revealStepIndex ?? 0;
+    const chainLength = chains[chainIndex]?.length ?? 0;
+
+    if (stepIndex < chainLength - 1) {
+      await ctx.db.patch(roomId, {
+        phaseData: { ...phaseData, revealStepIndex: stepIndex + 1 },
+      });
+    } else if (chainIndex < chainCount - 1) {
+      await ctx.db.patch(roomId, {
+        phaseData: {
+          ...phaseData,
+          revealChainIndex: chainIndex + 1,
+          revealStepIndex: 0,
+        },
+      });
+    } else {
+      // All chains revealed → finished
+      await ctx.db.patch(roomId, {
+        currentPhase: "finished",
+        status: "finished",
+        phaseDeadline: undefined,
+      });
+    }
   },
 });
 

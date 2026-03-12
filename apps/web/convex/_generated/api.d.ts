@@ -13,6 +13,7 @@ import type * as gameHandlers from "../gameHandlers.js";
 import type * as games_bluff from "../games/bluff.js";
 import type * as games_duel from "../games/duel.js";
 import type * as games_tegn from "../games/tegn.js";
+import type * as games_telefon from "../games/telefon.js";
 import type * as lib_advancePhase from "../lib/advancePhase.js";
 import type * as lib_colors from "../lib/colors.js";
 import type * as lib_roomCodes from "../lib/roomCodes.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   "games/bluff": typeof games_bluff;
   "games/duel": typeof games_duel;
   "games/tegn": typeof games_tegn;
+  "games/telefon": typeof games_telefon;
   "lib/advancePhase": typeof lib_advancePhase;
   "lib/colors": typeof lib_colors;
   "lib/roomCodes": typeof lib_roomCodes;
