@@ -306,8 +306,14 @@ export function HostView() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center gap-8 p-8">
-      {/* Settings button */}
-      <div className="absolute top-4 right-4">
+      {/* Top bar */}
+      <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+        <a
+          href="/"
+          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+        >
+          ← {da.back}
+        </a>
         <button
           onClick={() => setSettingsOpen(true)}
           className="rounded-xl bg-[var(--color-surface)] p-2 text-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-light)] transition-all cursor-pointer"
