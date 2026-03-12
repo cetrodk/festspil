@@ -52,16 +52,20 @@ export const getRoom = query({
       .withIndex("by_room", (q) => q.eq("roomId", room._id))
       .collect();
 
-    // During submit/vote, check which players have submitted
+    // Track which players have submitted for the current phase
     const phase = room.currentPhase;
-    if (phase === "submit" || phase === "vote") {
+    const basePhase = phase?.split("_")[0];
+    const isSubmittable = phase && room.roundNumber !== undefined &&
+      ["submit", "vote", "draw", "guess"].includes(basePhase ?? "");
+
+    if (isSubmittable) {
       const submissions = await ctx.db
         .query("submissions")
         .withIndex("by_room_round_phase", (q) =>
           q
             .eq("roomId", room._id)
             .eq("round", room.roundNumber!)
-            .eq("phase", phase),
+            .eq("phase", phase!),
         )
         .collect();
 
@@ -122,11 +126,11 @@ export const getRoomForPlayer = query({
 
     // Filter phaseData based on current phase
     let filteredPhaseData = room.phaseData;
-    const phase = room.currentPhase;
+    const phase = room.currentPhase ?? "";
+    const basePhase = phase.split("_")[0];
 
     if (phase === "submit") {
-      // During submit: show prompt but hide all answers
-      // Only show if this player has already submitted
+      // Duel/Bluff: During submit: show prompt but hide all answers
       const mySubmission = submissions.find(
         (s) => currentPlayer && s.playerId === currentPlayer._id,
       );
@@ -137,7 +141,7 @@ export const getRoomForPlayer = query({
         totalPlayers: players.length,
       };
     } else if (phase === "vote") {
-      // During vote: show anonymized answers, strip authorship + own answer
+      // Duel/Bluff: During vote: show anonymized answers, strip authorship
       const myVote = submissions.find(
         (s) =>
           currentPlayer &&
@@ -161,8 +165,82 @@ export const getRoomForPlayer = query({
         })),
         myVote: myVote?.content ?? null,
       };
+    } else if (phase === "draw") {
+      // Tegn: During draw: only show this player's word, hide all others
+      const phaseData = room.phaseData as any;
+      const myWord = currentPlayer
+        ? phaseData?.drawingWords?.[currentPlayer._id] ?? null
+        : null;
+      const mySubmission = submissions.find(
+        (s) => currentPlayer && s.playerId === currentPlayer._id,
+      );
+      filteredPhaseData = {
+        totalDrawings: phaseData?.totalDrawings,
+        drawingIndex: phaseData?.drawingIndex,
+        myWord,
+        mySubmission: mySubmission ? true : null,
+        submittedCount: submissions.length,
+        totalPlayers: players.length,
+      };
+    } else if (basePhase === "guess") {
+      // Tegn: During guess: artist sees waiting, others see input
+      const phaseData = room.phaseData as any;
+      const isArtist = currentPlayer?._id === phaseData?.currentArtistId;
+      const mySubmission = submissions.find(
+        (s) => currentPlayer && s.playerId === currentPlayer._id,
+      );
+      filteredPhaseData = {
+        drawingIndex: phaseData?.drawingIndex,
+        totalDrawings: phaseData?.totalDrawings,
+        currentArtistId: phaseData?.currentArtistId,
+        currentArtistName: phaseData?.currentArtistName,
+        isArtist,
+        mySubmission: mySubmission?.content ?? null,
+        submittedCount: submissions.length,
+        totalGuessers: players.length - 1,
+      };
+    } else if (basePhase === "vote" && phase !== "vote") {
+      // Tegn: During vote_K: same pattern as Duel/Bluff vote
+      const phaseData = room.phaseData as any;
+      const votePhase = phase; // e.g. "vote_0"
+      const myVote = submissions.find(
+        (s) =>
+          currentPlayer &&
+          s.playerId === currentPlayer._id &&
+          s.phase === votePhase,
+      );
+      const answers = (phaseData?.answersAnonymized ?? []) as Array<{
+        id: string;
+        text: string;
+      }>;
+      // Find this player's guess in the answers (from the guess phase)
+      const myAnswerId = currentPlayer
+        ? (phaseData?.answers ?? []).find(
+            (a: any) => a.playerId === currentPlayer._id,
+          )?.id
+        : undefined;
+      filteredPhaseData = {
+        drawingIndex: phaseData?.drawingIndex,
+        totalDrawings: phaseData?.totalDrawings,
+        currentArtistId: phaseData?.currentArtistId,
+        currentArtistName: phaseData?.currentArtistName,
+        drawingData: phaseData?.drawingData,
+        answersAnonymized: answers.map((a) => ({
+          ...a,
+          isOwn: a.id === myAnswerId,
+        })),
+        myVote: myVote?.content ?? null,
+        isArtist: currentPlayer?._id === phaseData?.currentArtistId,
+      };
     }
-    // During reveal/scores: return everything
+    // During reveal/scores: return everything (but strip drawingWords for Tegn)
+    else if (basePhase === "reveal" || phase === "scores") {
+      const phaseData = room.phaseData as any;
+      if (phaseData?.drawingWords) {
+        const { drawingWords, ...rest } = phaseData;
+        filteredPhaseData = rest;
+      }
+    }
 
     return {
       _id: room._id,

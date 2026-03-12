@@ -41,6 +41,20 @@ export interface GameHandlers {
     phaseData: Record<string, unknown>;
     scoreDeltas: Map<Id<"players">, number>;
   }>;
+
+  /** Build data for a sub-round guess phase (used by Tegn & Gæt) */
+  buildGuessData?(
+    ctx: MutationCtx,
+    room: Doc<"rooms">,
+    players: Doc<"players">[],
+    drawingIndex: number,
+  ): Promise<Record<string, unknown>>;
+
+  /** How many players are expected to submit in the current phase */
+  getExpectedSubmitterCount?(
+    room: Doc<"rooms">,
+    players: Doc<"players">[],
+  ): number;
 }
 
 // Game handler registry — populated by each game module

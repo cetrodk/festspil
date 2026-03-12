@@ -12,6 +12,7 @@ import type * as game from "../game.js";
 import type * as gameHandlers from "../gameHandlers.js";
 import type * as games_bluff from "../games/bluff.js";
 import type * as games_duel from "../games/duel.js";
+import type * as games_tegn from "../games/tegn.js";
 import type * as lib_advancePhase from "../lib/advancePhase.js";
 import type * as lib_colors from "../lib/colors.js";
 import type * as lib_roomCodes from "../lib/roomCodes.js";
@@ -19,6 +20,7 @@ import type * as players from "../players.js";
 import type * as rooms from "../rooms.js";
 import type * as seed_bluffPrompts from "../seed/bluffPrompts.js";
 import type * as seed_duelPrompts from "../seed/duelPrompts.js";
+import type * as seed_tegnPrompts from "../seed/tegnPrompts.js";
 import type * as timers from "../timers.js";
 
 import type {
@@ -32,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   gameHandlers: typeof gameHandlers;
   "games/bluff": typeof games_bluff;
   "games/duel": typeof games_duel;
+  "games/tegn": typeof games_tegn;
   "lib/advancePhase": typeof lib_advancePhase;
   "lib/colors": typeof lib_colors;
   "lib/roomCodes": typeof lib_roomCodes;
@@ -39,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   rooms: typeof rooms;
   "seed/bluffPrompts": typeof seed_bluffPrompts;
   "seed/duelPrompts": typeof seed_duelPrompts;
+  "seed/tegnPrompts": typeof seed_tegnPrompts;
   timers: typeof timers;
 }>;
 

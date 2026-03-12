@@ -7,6 +7,19 @@ import { advancePhaseInternal, getPhaseDuration } from "./lib/advancePhase";
 // Ensure game handlers are registered
 import "./games/duel";
 import "./games/bluff";
+import "./games/tegn";
+
+/** Check if a phase accepts player submissions */
+function isSubmittablePhase(phase: string): boolean {
+  const base = phase.split("_")[0];
+  return ["submit", "vote", "draw", "guess"].includes(base);
+}
+
+/** Check if a phase is a vote-type phase */
+function isVotePhase(phase: string): boolean {
+  const base = phase.split("_")[0];
+  return base === "vote";
+}
 
 // ── Public mutations ──────────────────────────────────────────────────
 
@@ -28,7 +41,10 @@ export const startGame = mutation({
 
     if (players.length < 3) throw new Error("Need at least 3 players");
 
-    const totalRounds = Math.min(players.length, 3);
+    const isTegn = room.gameType === "tegn";
+    const totalRounds = isTegn ? 1 : Math.min(players.length, 3);
+    const firstPhase = isTegn ? "draw" : "submit";
+
     const handlers = getGameHandlers(room.gameType);
     const roundData = await handlers.setupRound(
       ctx,
@@ -36,10 +52,10 @@ export const startGame = mutation({
       players,
     );
 
-    const deadline = Date.now() + getPhaseDuration("submit", room.settings as Record<string, unknown> | undefined);
+    const deadline = Date.now() + getPhaseDuration(firstPhase, room.settings as Record<string, unknown> | undefined);
     await ctx.db.patch(roomId, {
       status: "playing",
-      currentPhase: "submit",
+      currentPhase: firstPhase,
       roundNumber: 1,
       totalRounds,
       phaseData: roundData,
@@ -78,6 +94,8 @@ export const updateSettings = mutation({
       voteTime: v.optional(v.float64()),
       revealTime: v.optional(v.float64()),
       scoresTime: v.optional(v.float64()),
+      drawTime: v.optional(v.float64()),
+      guessTime: v.optional(v.float64()),
     }),
   },
   handler: async (ctx, { roomId, hostId, settings }) => {
@@ -148,7 +166,9 @@ export const submitAnswer = mutation({
     ]);
 
     if (!room || !player) throw new Error("Not found");
-    if (room.currentPhase !== "submit" && room.currentPhase !== "vote") {
+    const phase = room.currentPhase ?? "";
+
+    if (!isSubmittablePhase(phase)) {
       throw new Error("Not accepting submissions");
     }
 
@@ -157,16 +177,16 @@ export const submitAnswer = mutation({
       return; // silently drop late submissions
     }
 
-    const phase = room.currentPhase;
     const handlers = getGameHandlers(room.gameType);
+    const basePhase = phase.split("_")[0];
 
-    if (phase === "submit") {
-      await handlers.onSubmission(ctx, room, player, content);
-    } else if (phase === "vote") {
+    if (isVotePhase(phase)) {
       await handlers.onVote(ctx, room, player, content);
+    } else {
+      await handlers.onSubmission(ctx, room, player, content);
     }
 
-    // Check if all players have submitted
+    // Check if all expected players have submitted
     const players = await ctx.db
       .query("players")
       .withIndex("by_room", (q) => q.eq("roomId", roomId))
@@ -182,7 +202,11 @@ export const submitAnswer = mutation({
       )
       .collect();
 
-    if (submissions.length >= players.length) {
+    const expectedCount = handlers.getExpectedSubmitterCount
+      ? handlers.getExpectedSubmitterCount(room, players)
+      : players.length;
+
+    if (submissions.length >= expectedCount) {
       await advancePhaseInternal(ctx, room, "ALL_SUBMITTED");
     }
   },

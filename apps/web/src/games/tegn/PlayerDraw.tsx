@@ -1,0 +1,105 @@
+import { useRef, useState, useCallback } from "react";
+import { useMutation } from "convex/react";
+import { motion } from "framer-motion";
+import { api } from "../../../convex/_generated/api";
+import { CountdownTimer } from "@festspil/ui/CountdownTimer";
+import { sfxWhoosh, sfxUrgent } from "@/lib/sounds";
+import { da } from "@/lib/da";
+import { DrawingCanvas, type DrawingCanvasRef } from "./DrawingCanvas";
+import type { PhaseComponentProps } from "../registry";
+
+export default function PlayerDraw({ room, sessionId }: PhaseComponentProps) {
+  const submitAnswer = useMutation(api.game.submitAnswer);
+  const canvasRef = useRef<DrawingCanvasRef>(null);
+  const [submitted, setSubmitted] = useState(false);
+
+  const phaseData = room.phaseData ?? {};
+  const myWord = phaseData.myWord ?? "???";
+
+  const handleTick = useCallback((s: number) => {
+    if (s <= 5 && s > 0) sfxUrgent();
+  }, []);
+
+  async function handleSubmit() {
+    const strokes = canvasRef.current?.getStrokes();
+    if (!strokes || strokes.length === 0) return;
+
+    sfxWhoosh();
+    await submitAnswer({
+      roomId: room._id,
+      sessionId,
+      content: strokes,
+    });
+    setSubmitted(true);
+  }
+
+  if (submitted || phaseData.mySubmission) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200 }}
+          className="text-6xl"
+        >
+          ✓
+        </motion.div>
+        <p className="text-2xl font-bold">{da.waiting}</p>
+        <div className="text-4xl font-mono text-[var(--color-primary)]">
+          <CountdownTimer deadline={room.phaseDeadline ?? null} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col items-center gap-4 p-4 pt-6">
+      <div className="flex items-center gap-4">
+        <div className="text-3xl font-mono text-[var(--color-primary)]">
+          <CountdownTimer
+            deadline={room.phaseDeadline ?? null}
+            onTick={handleTick}
+          />
+        </div>
+      </div>
+
+      <motion.p
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center text-xl font-bold"
+      >
+        {da.tegn.draw}: <span className="text-[var(--color-primary)]">{myWord}</span>
+      </motion.p>
+
+      <div className="w-full max-w-sm flex-1">
+        <DrawingCanvas
+          ref={canvasRef}
+          width={400}
+          height={300}
+          showControls
+        />
+      </div>
+
+      <div className="flex w-full max-w-sm gap-3">
+        <button
+          onClick={() => canvasRef.current?.undo()}
+          className="flex-1 rounded-xl bg-[var(--color-surface)] p-3 text-sm font-medium transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+        >
+          {da.tegn.undo}
+        </button>
+        <button
+          onClick={() => canvasRef.current?.clear()}
+          className="flex-1 rounded-xl bg-[var(--color-surface)] p-3 text-sm font-medium transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+        >
+          {da.tegn.clear}
+        </button>
+        <button
+          onClick={handleSubmit}
+          className="flex-[2] rounded-xl bg-[var(--color-primary)] p-3 text-lg font-bold transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+        >
+          {da.submit}
+        </button>
+      </div>
+    </div>
+  );
+}

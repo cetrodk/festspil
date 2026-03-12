@@ -15,6 +15,8 @@ const TIMER_OPTIONS = [
   { key: "voteTime", label: "Stemmetid", defaultMs: 30_000, min: 10, max: 90 },
   { key: "revealTime", label: "Afsløring", defaultMs: 10_000, min: 5, max: 30 },
   { key: "scoresTime", label: "Pointvisning", defaultMs: 8_000, min: 3, max: 20 },
+  { key: "drawTime", label: "Tegnetid", defaultMs: 90_000, min: 30, max: 180 },
+  { key: "guessTime", label: "Gættetid", defaultMs: 45_000, min: 15, max: 90 },
 ] as const;
 
 function HostSettingsOverlay({
@@ -131,7 +133,8 @@ export function HostView() {
   // Phase routing: if game is playing, show the game phase component
   if (room.status === "playing" && room.currentPhase) {
     const components = gameComponents[room.gameType];
-    const PhaseComponent = components?.host[room.currentPhase];
+    const basePhase = room.currentPhase.split("_")[0];
+    const PhaseComponent = components?.host[basePhase];
 
     if (PhaseComponent) {
       return (

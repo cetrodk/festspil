@@ -3,6 +3,7 @@ import { LandingPage } from "@/pages/LandingPage";
 import { JoinPage } from "@/pages/JoinPage";
 import { HostView } from "@/pages/HostView";
 import { PlayerView } from "@/pages/PlayerView";
+import { DrawTest } from "@/pages/DrawTest";
 
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
         <Route path="/play" element={<JoinPage />} />
         <Route path="/play/:code" element={<PlayerView />} />
         <Route path="/host/:code" element={<HostView />} />
+        <Route path="/draw-test" element={<DrawTest />} />
       </Routes>
     </BrowserRouter>
   );

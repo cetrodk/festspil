@@ -74,5 +74,13 @@ export const da = {
     theWordWas: "Ordet var:",
     clear: "Ryd",
     undo: "Fortryd",
+    youAreTheArtist: "Du er kunstneren!",
+    watchThemGuess: "Se de andre gætte på skærmen",
+    whatIsBeingDrawn: "Hvad bliver der tegnet?",
+    drawing: "Tegning",
+    artistBonus: "Kunstnerbonus!",
+    nextDrawing: "Næste tegning",
+    yourGuess: "Dit gæt",
+    guessReal: "Gæt det rigtige ord",
   },
 } as const;

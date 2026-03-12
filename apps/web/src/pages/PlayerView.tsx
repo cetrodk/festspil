@@ -87,7 +87,8 @@ export function PlayerView() {
   // Phase routing: if game is playing, show the player phase component
   if (room.status === "playing" && room.currentPhase) {
     const components = gameComponents[room.gameType];
-    const PhaseComponent = components?.player[room.currentPhase];
+    const basePhase = room.currentPhase.split("_")[0];
+    const PhaseComponent = components?.player[basePhase];
 
     if (PhaseComponent) {
       return (

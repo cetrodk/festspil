@@ -6,6 +6,7 @@ import { getGameHandlers } from "../gameHandlers";
 // Ensure game handlers are registered before any phase advancement
 import "../games/duel";
 import "../games/bluff";
+import "../games/tegn";
 
 /** Default phase durations in ms */
 export const DEFAULT_DURATIONS: Record<string, number> = {
@@ -13,6 +14,8 @@ export const DEFAULT_DURATIONS: Record<string, number> = {
   vote: 30_000,
   reveal: 10_000,
   scores: 8_000,
+  draw: 90_000,
+  guess: 45_000,
 };
 
 const SETTINGS_KEY: Record<string, string> = {
@@ -20,15 +23,19 @@ const SETTINGS_KEY: Record<string, string> = {
   vote: "voteTime",
   reveal: "revealTime",
   scores: "scoresTime",
+  draw: "drawTime",
+  guess: "guessTime",
 };
 
 /** Get phase duration, respecting room settings overrides */
 export function getPhaseDuration(phase: string, settings?: Record<string, unknown>): number {
-  const key = SETTINGS_KEY[phase];
+  // For indexed phases like "guess_0", use the base phase
+  const basePhase = phase.split("_")[0];
+  const key = SETTINGS_KEY[basePhase];
   if (key && settings && typeof settings[key] === "number") {
     return settings[key] as number;
   }
-  return DEFAULT_DURATIONS[phase] ?? 0;
+  return DEFAULT_DURATIONS[basePhase] ?? 0;
 }
 
 
@@ -46,13 +53,20 @@ export async function advancePhaseInternal(
     .collect();
 
   const handlers = getGameHandlers(room.gameType);
+
+  // Extract base phase and sub-round index for Tegn
+  const [basePhase, subIdxStr] = currentPhase.split("_");
+  const drawingIndex = subIdxStr !== undefined ? parseInt(subIdxStr, 10) : 0;
+
   let nextPhase: string;
   let nextPhaseData: Record<string, unknown> = room.phaseData ?? {};
 
   if (currentPhase === "submit") {
+    // Duel / Bluff: submit → vote
     nextPhase = "vote";
     nextPhaseData = await handlers.buildVoteData(ctx, room, players);
   } else if (currentPhase === "vote") {
+    // Duel / Bluff: vote → reveal
     nextPhase = "reveal";
     const { phaseData, scoreDeltas } = await handlers.computeResults(
       ctx,
@@ -61,14 +75,14 @@ export async function advancePhaseInternal(
     );
     nextPhaseData = phaseData;
 
-    // Apply score deltas
-    for (const [playerId, delta] of scoreDeltas) {
-      const player = players.find((p) => p._id === playerId);
-      if (player) {
-        await ctx.db.patch(playerId, { score: player.score + delta });
-      }
-    }
+    await Promise.all(
+      [...scoreDeltas].map(([playerId, delta]) => {
+        const player = players.find((p) => p._id === playerId);
+        return player ? ctx.db.patch(playerId, { score: player.score + delta }) : null;
+      }),
+    );
   } else if (currentPhase === "reveal") {
+    // Duel / Bluff: reveal → scores or next round
     const roundNumber = room.roundNumber ?? 1;
     const totalRounds = room.totalRounds ?? 1;
 
@@ -83,10 +97,68 @@ export async function advancePhaseInternal(
     }
 
     nextPhase = "scores";
+  } else if (currentPhase === "draw") {
+    // Tegn: draw → guess_0
+    if (!handlers.buildGuessData) {
+      throw new Error("buildGuessData not implemented");
+    }
+    nextPhaseData = await handlers.buildGuessData(ctx, room, players, 0);
+    nextPhase = "guess_0";
+  } else if (basePhase === "guess") {
+    // Tegn: guess_K → vote_K
+    nextPhaseData = await handlers.buildVoteData(ctx, room, players);
+    nextPhase = `vote_${drawingIndex}`;
+  } else if (basePhase === "vote" && subIdxStr !== undefined) {
+    // Tegn: vote_K → reveal_K
+    const { phaseData, scoreDeltas } = await handlers.computeResults(
+      ctx,
+      room,
+      players,
+    );
+    nextPhaseData = phaseData;
+    nextPhase = `reveal_${drawingIndex}`;
+
+    await Promise.all(
+      [...scoreDeltas].map(([playerId, delta]) => {
+        const player = players.find((p) => p._id === playerId);
+        return player ? ctx.db.patch(playerId, { score: player.score + delta }) : null;
+      }),
+    );
+  } else if (basePhase === "reveal" && subIdxStr !== undefined) {
+    // Tegn: reveal_K → guess_(K+1) or scores
+    const totalDrawings = (room.phaseData as any)?.totalDrawings ?? 1;
+
+    if (drawingIndex < totalDrawings - 1) {
+      if (!handlers.buildGuessData) {
+        throw new Error("buildGuessData not implemented");
+      }
+      nextPhaseData = await handlers.buildGuessData(
+        ctx,
+        room,
+        players,
+        drawingIndex + 1,
+      );
+      nextPhase = `guess_${drawingIndex + 1}`;
+    } else {
+      // All drawings done → scores
+      nextPhase = "scores";
+    }
   } else if (currentPhase === "scores") {
-    // Start next round
-    nextPhase = "submit";
-    const nextRound = (room.roundNumber ?? 1) + 1;
+    // All games: scores → next round or finish
+    const roundNumber = room.roundNumber ?? 1;
+    const totalRounds = room.totalRounds ?? 1;
+
+    if (roundNumber >= totalRounds) {
+      await ctx.db.patch(room._id, {
+        currentPhase: "finished",
+        status: "finished",
+        phaseDeadline: undefined,
+      });
+      return;
+    }
+
+    nextPhase = room.gameType === "tegn" ? "draw" : "submit";
+    const nextRound = roundNumber + 1;
     nextPhaseData = await handlers.setupRound(
       ctx,
       { ...room, roundNumber: nextRound },
