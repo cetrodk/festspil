@@ -47,11 +47,36 @@ export const getRoom = query({
 
     if (!room) return null;
 
-    // Fetch players in parallel with room (already have room)
     const players = await ctx.db
       .query("players")
       .withIndex("by_room", (q) => q.eq("roomId", room._id))
       .collect();
+
+    // During submit/vote, check which players have submitted
+    const phase = room.currentPhase;
+    if (phase === "submit" || phase === "vote") {
+      const submissions = await ctx.db
+        .query("submissions")
+        .withIndex("by_room_round_phase", (q) =>
+          q
+            .eq("roomId", room._id)
+            .eq("round", room.roundNumber!)
+            .eq("phase", phase),
+        )
+        .collect();
+
+      const submittedPlayerIds = new Set(
+        submissions.map((s) => s.playerId.toString()),
+      );
+
+      return {
+        ...room,
+        players: players.map((p) => ({
+          ...p,
+          hasSubmitted: submittedPlayerIds.has(p._id.toString()),
+        })),
+      };
+    }
 
     return { ...room, players };
   },

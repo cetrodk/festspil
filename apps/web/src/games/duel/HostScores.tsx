@@ -1,15 +1,24 @@
+import { useMutation } from "convex/react";
 import { motion } from "framer-motion";
+import { api } from "../../../convex/_generated/api";
+import { CountdownTimer } from "@festspil/ui/CountdownTimer";
 import { da } from "@/lib/da";
 import type { PhaseComponentProps } from "../registry";
 
-export default function HostScores({ room }: PhaseComponentProps) {
+export default function HostScores({ room, sessionId }: PhaseComponentProps) {
+  const hostAdvance = useMutation(api.game.hostAdvance);
   const players = [...(room.players ?? [])].sort(
     (a: any, b: any) => b.score - a.score,
   );
 
+  const isLastRound = (room.roundNumber ?? 1) >= (room.totalRounds ?? 1);
+
   return (
     <div className="flex flex-col items-center gap-8">
       <h2 className="text-3xl font-bold">{da.scores}</h2>
+      <p className="text-sm text-[var(--color-text-muted)]">
+        {da.round} {room.roundNumber} {da.of} {room.totalRounds}
+      </p>
 
       <div className="w-full max-w-lg flex flex-col gap-3">
         {players.map((player: any, i: number) => (
@@ -41,6 +50,18 @@ export default function HostScores({ room }: PhaseComponentProps) {
             </motion.span>
           </motion.div>
         ))}
+      </div>
+
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => hostAdvance({ roomId: room._id, hostId: sessionId })}
+          className="rounded-xl bg-[var(--color-primary)] px-10 py-4 text-xl font-bold transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+        >
+          {isLastRound ? da.gameOver : da.nextRound}
+        </button>
+        <span className="text-sm text-[var(--color-text-muted)]">
+          <CountdownTimer deadline={room.phaseDeadline ?? null} />s
+        </span>
       </div>
     </div>
   );

@@ -29,15 +29,21 @@ registerGameHandlers("duel", {
     const text = String(content).trim().slice(0, 280);
     if (!text) throw new Error("Tomt svar");
 
-    // Check for duplicate submission
+    // Check for duplicate submission in THIS room
     const existing = await ctx.db
       .query("submissions")
       .withIndex("by_player_round", (q) =>
         q.eq("playerId", player._id).eq("round", room.roundNumber!),
       )
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("roomId"), room._id),
+          q.eq(q.field("phase"), "submit"),
+        ),
+      )
       .first();
 
-    if (existing && existing.phase === "submit") {
+    if (existing) {
       // Update existing submission
       await ctx.db.patch(existing._id, { content: text });
       return;

@@ -14,14 +14,10 @@ export function JoinPage() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [joining, setJoining] = useState(false);
+  const [dismissedRejoin, setDismissedRejoin] = useState(false);
 
-  // Check for existing session to auto-rejoin
+  // Check for existing active session
   const existingSession = useQuery(api.players.rejoinRoom, { sessionId });
-
-  if (existingSession) {
-    navigate(`/play/${existingSession.roomCode}`, { replace: true });
-    return null;
-  }
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault();
@@ -46,6 +42,27 @@ export function JoinPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-4">
       <h1 className="text-4xl font-black">{da.title}</h1>
+
+      {existingSession && !dismissedRejoin ? (
+        <div className="flex w-full max-w-xs flex-col gap-3 rounded-xl bg-[var(--color-surface)] p-4">
+          <p className="text-center text-sm">
+            Du er allerede i et spil som{" "}
+            <strong>{existingSession.playerName}</strong>
+          </p>
+          <button
+            onClick={() => navigate(`/play/${existingSession.roomCode}`)}
+            className="rounded-lg bg-[var(--color-primary)] p-3 font-bold transition-transform hover:scale-105 active:scale-95"
+          >
+            Vend tilbage ({existingSession.roomCode})
+          </button>
+          <button
+            onClick={() => setDismissedRejoin(true)}
+            className="text-sm text-[var(--color-text-muted)] underline"
+          >
+            Deltag i et nyt spil i stedet
+          </button>
+        </div>
+      ) : null}
 
       <form
         onSubmit={handleJoin}

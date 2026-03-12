@@ -1,5 +1,6 @@
 import { internalMutation } from "./_generated/server";
 import { v } from "convex/values";
+import { advancePhaseInternal } from "./lib/advancePhase";
 
 /**
  * Scheduled timer callback. Fires when a phase deadline expires.
@@ -17,8 +18,6 @@ export const onTimerExpired = internalMutation({
     if (room.phaseDeadline !== expectedDeadline) return; // stale timer
     if (room.status !== "playing") return;
 
-    // Import game module to advance phase
-    const { advancePhaseInternal } = await import("./game");
     await advancePhaseInternal(ctx, room, "TIMER_EXPIRED");
   },
 });

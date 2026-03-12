@@ -1,8 +1,12 @@
+import { useMutation } from "convex/react";
 import { motion } from "framer-motion";
+import { api } from "../../../convex/_generated/api";
+import { CountdownTimer } from "@festspil/ui/CountdownTimer";
 import { da } from "@/lib/da";
 import type { PhaseComponentProps } from "../registry";
 
-export default function HostReveal({ room }: PhaseComponentProps) {
+export default function HostReveal({ room, sessionId }: PhaseComponentProps) {
+  const hostAdvance = useMutation(api.game.hostAdvance);
   const phaseData = room.phaseData ?? {};
   const results = phaseData.results ?? [];
   const promptText = phaseData.promptText ?? "";
@@ -57,6 +61,23 @@ export default function HostReveal({ room }: PhaseComponentProps) {
           <p className="text-3xl font-black">{results[0].playerName}</p>
         </motion.div>
       ) : null}
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: results.length * 0.3 + 1 }}
+        className="flex items-center gap-4"
+      >
+        <button
+          onClick={() => hostAdvance({ roomId: room._id, hostId: sessionId })}
+          className="rounded-xl bg-[var(--color-primary)] px-10 py-4 text-xl font-bold transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+        >
+          {da.nextRound}
+        </button>
+        <span className="text-sm text-[var(--color-text-muted)]">
+          <CountdownTimer deadline={room.phaseDeadline ?? null} />s
+        </span>
+      </motion.div>
     </div>
   );
 }
