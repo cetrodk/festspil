@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -10,12 +10,115 @@ import { sfxFanfare } from "@/lib/sounds";
 import { GameAvatar } from "@/components/GameAvatar";
 import { da } from "@/lib/da";
 
+const TIMER_OPTIONS = [
+  { key: "submitTime", label: "Svartid", defaultMs: 60_000, min: 15, max: 180 },
+  { key: "voteTime", label: "Stemmetid", defaultMs: 30_000, min: 10, max: 90 },
+  { key: "revealTime", label: "Afsløring", defaultMs: 10_000, min: 5, max: 30 },
+  { key: "scoresTime", label: "Pointvisning", defaultMs: 8_000, min: 3, max: 20 },
+] as const;
+
+function HostSettingsOverlay({
+  room,
+  sessionId,
+  onClose,
+}: {
+  room: any;
+  sessionId: string;
+  onClose: () => void;
+}) {
+  const updateSettings = useMutation(api.game.updateSettings);
+  const restartGame = useMutation(api.game.restartGame);
+  const settings = room.settings ?? {};
+
+  const handleChange = useCallback(
+    (key: string, seconds: number) => {
+      updateSettings({
+        roomId: room._id,
+        hostId: sessionId,
+        settings: { [key]: seconds * 1000 },
+      });
+    },
+    [room._id, sessionId, updateSettings],
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm rounded-2xl bg-[var(--color-bg)] p-6 shadow-2xl border border-[var(--color-surface)]"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold">Indstillinger</h3>
+          <button
+            onClick={onClose}
+            className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-2xl leading-none cursor-pointer"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-5">
+          {TIMER_OPTIONS.map(({ key, label, defaultMs, min, max }) => {
+            const currentMs = typeof settings[key] === "number" ? settings[key] : defaultMs;
+            const currentSec = Math.round(currentMs / 1000);
+            return (
+              <div key={key}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium">{label}</span>
+                  <span className="text-sm font-mono text-[var(--color-primary)]">
+                    {currentSec}s
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={min}
+                  max={max}
+                  value={currentSec}
+                  onChange={(e) => handleChange(key, Number(e.target.value))}
+                  className="w-full accent-[var(--color-primary)] cursor-pointer"
+                />
+                <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
+                  <span>{min}s</span>
+                  <span>{max}s</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {room.status !== "lobby" ? (
+          <button
+            onClick={() => {
+              if (confirm("Er du sikker? Spillet nulstilles til lobbyen.")) {
+                restartGame({ roomId: room._id, hostId: sessionId });
+                onClose();
+              }
+            }}
+            className="mt-6 w-full rounded-xl border border-red-500/30 p-3 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+          >
+            Genstart spil
+          </button>
+        ) : null}
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export function HostView() {
   const { code } = useParams<{ code: string }>();
   const sessionId = useSessionId();
   const room = useQuery(api.rooms.getRoom, code ? { code } : "skip");
   const startGame = useMutation(api.game.startGame);
-  const restartGame = useMutation(api.game.restartGame);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   if (!room) {
     return (
@@ -35,19 +138,25 @@ export function HostView() {
         <div className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
           <div className="absolute top-4 right-4 flex items-center gap-4">
             <button
-              onClick={() => {
-                if (confirm("Er du sikker? Spillet nulstilles til lobbyen.")) {
-                  restartGame({ roomId: room._id, hostId: sessionId });
-                }
-              }}
-              className="text-xs text-[var(--color-text-muted)] hover:text-red-400 transition-colors cursor-pointer"
+              onClick={() => setSettingsOpen(true)}
+              className="text-3xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
+              title="Indstillinger"
             >
-              Genstart
+              ⚙
             </button>
             <span className="font-mono text-sm text-[var(--color-text-muted)]">
               {room.code}
             </span>
           </div>
+          <AnimatePresence>
+            {settingsOpen ? (
+              <HostSettingsOverlay
+                room={room}
+                sessionId={sessionId}
+                onClose={() => setSettingsOpen(false)}
+              />
+            ) : null}
+          </AnimatePresence>
           <AnimatePresence mode="wait">
             <motion.div
               key={room.currentPhase + "-" + room.roundNumber}
@@ -80,6 +189,24 @@ export function HostView() {
   // Lobby view
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
+      <div className="absolute top-4 right-4">
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="text-3xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
+          title="Indstillinger"
+        >
+          ⚙
+        </button>
+      </div>
+      <AnimatePresence>
+        {settingsOpen ? (
+          <HostSettingsOverlay
+            room={room}
+            sessionId={sessionId}
+            onClose={() => setSettingsOpen(false)}
+          />
+        ) : null}
+      </AnimatePresence>
       <p className="text-sm uppercase tracking-widest text-[var(--color-text-muted)]">
         {da.roomCode}
       </p>

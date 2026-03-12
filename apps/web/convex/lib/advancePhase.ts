@@ -6,13 +6,30 @@ import { getGameHandlers } from "../gameHandlers";
 // Ensure game handlers are registered before any phase advancement
 import "../games/duel";
 
-/** Phase durations in ms, keyed by phase name */
-export const PHASE_DURATIONS: Record<string, (playerCount: number) => number> = {
-  submit: () => 60_000,
-  vote: () => 30_000,
-  reveal: () => 10_000,
-  scores: () => 8_000,
+/** Default phase durations in ms */
+export const DEFAULT_DURATIONS: Record<string, number> = {
+  submit: 60_000,
+  vote: 30_000,
+  reveal: 10_000,
+  scores: 8_000,
 };
+
+const SETTINGS_KEY: Record<string, string> = {
+  submit: "submitTime",
+  vote: "voteTime",
+  reveal: "revealTime",
+  scores: "scoresTime",
+};
+
+/** Get phase duration, respecting room settings overrides */
+export function getPhaseDuration(phase: string, settings?: Record<string, unknown>): number {
+  const key = SETTINGS_KEY[phase];
+  if (key && settings && typeof settings[key] === "number") {
+    return settings[key] as number;
+  }
+  return DEFAULT_DURATIONS[phase] ?? 0;
+}
+
 
 export async function advancePhaseInternal(
   ctx: MutationCtx,
@@ -79,8 +96,7 @@ export async function advancePhaseInternal(
     return;
   }
 
-  const durationFn = PHASE_DURATIONS[nextPhase];
-  const duration = durationFn ? durationFn(players.length) : 0;
+  const duration = getPhaseDuration(nextPhase, room.settings as Record<string, unknown> | undefined);
   const deadline = duration > 0 ? Date.now() + duration : undefined;
 
   await ctx.db.patch(room._id, {

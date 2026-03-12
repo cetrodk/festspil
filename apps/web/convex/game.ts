@@ -2,7 +2,7 @@ import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { getGameHandlers } from "./gameHandlers";
-import { advancePhaseInternal, PHASE_DURATIONS } from "./lib/advancePhase";
+import { advancePhaseInternal, getPhaseDuration } from "./lib/advancePhase";
 
 // Ensure game handlers are registered
 import "./games/duel";
@@ -35,7 +35,7 @@ export const startGame = mutation({
       players,
     );
 
-    const deadline = Date.now() + PHASE_DURATIONS.submit(players.length);
+    const deadline = Date.now() + getPhaseDuration("submit", room.settings as Record<string, unknown> | undefined);
     await ctx.db.patch(roomId, {
       status: "playing",
       currentPhase: "submit",
@@ -65,6 +65,28 @@ export const hostAdvance = mutation({
     if (room.status !== "playing") return;
 
     await advancePhaseInternal(ctx, room, "HOST_ADVANCE");
+  },
+});
+
+export const updateSettings = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    hostId: v.string(),
+    settings: v.object({
+      submitTime: v.optional(v.float64()),
+      voteTime: v.optional(v.float64()),
+      revealTime: v.optional(v.float64()),
+      scoresTime: v.optional(v.float64()),
+    }),
+  },
+  handler: async (ctx, { roomId, hostId, settings }) => {
+    const room = await ctx.db.get(roomId);
+    if (!room) throw new Error("Room not found");
+    if (room.hostId !== hostId) throw new Error("Only the host can change settings");
+
+    await ctx.db.patch(roomId, {
+      settings: { ...(room.settings ?? {}), ...settings },
+    });
   },
 });
 
