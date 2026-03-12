@@ -23,12 +23,13 @@ export default function PlayerDraw({ room, sessionId }: PhaseComponentProps) {
   async function handleSubmit() {
     const strokes = canvasRef.current?.getStrokes();
     if (!strokes || strokes.length === 0) return;
+    const viewBoxHeight = canvasRef.current?.getViewBoxHeight() ?? 300;
 
     sfxWhoosh();
     await submitAnswer({
       roomId: room._id,
       sessionId,
-      content: strokes,
+      content: { strokes, viewBoxHeight },
     });
     setSubmitted(true);
   }
@@ -53,9 +54,16 @@ export default function PlayerDraw({ room, sessionId }: PhaseComponentProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center gap-4 p-4 pt-6">
-      <div className="flex items-center gap-4">
-        <div className="text-3xl font-mono text-[var(--color-primary)]">
+    <div className="flex h-dvh flex-col gap-3 p-4 pt-6">
+      <div className="flex items-center justify-between">
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-lg font-bold"
+        >
+          {da.tegn.draw}: <span className="text-[var(--color-primary)]">{myWord}</span>
+        </motion.p>
+        <div className="text-2xl font-mono text-[var(--color-primary)]">
           <CountdownTimer
             deadline={room.phaseDeadline ?? null}
             onTick={handleTick}
@@ -63,39 +71,28 @@ export default function PlayerDraw({ room, sessionId }: PhaseComponentProps) {
         </div>
       </div>
 
-      <motion.p
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center text-xl font-bold"
-      >
-        {da.tegn.draw}: <span className="text-[var(--color-primary)]">{myWord}</span>
-      </motion.p>
+      <DrawingCanvas
+        ref={canvasRef}
+        showControls
+        className="flex-1 min-h-0"
+      />
 
-      <div className="w-full max-w-sm flex-1">
-        <DrawingCanvas
-          ref={canvasRef}
-          width={400}
-          height={300}
-          showControls
-        />
-      </div>
-
-      <div className="flex w-full max-w-sm gap-3">
+      <div className="flex gap-3">
         <button
           onClick={() => canvasRef.current?.undo()}
-          className="flex-1 rounded-xl bg-[var(--color-surface)] p-3 text-sm font-medium transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+          className="flex-1 rounded-xl bg-[var(--color-surface)] p-3 text-sm font-medium transition-opacity active:opacity-70 cursor-pointer"
         >
           {da.tegn.undo}
         </button>
         <button
           onClick={() => canvasRef.current?.clear()}
-          className="flex-1 rounded-xl bg-[var(--color-surface)] p-3 text-sm font-medium transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+          className="flex-1 rounded-xl bg-[var(--color-surface)] p-3 text-sm font-medium transition-opacity active:opacity-70 cursor-pointer"
         >
           {da.tegn.clear}
         </button>
         <button
           onClick={handleSubmit}
-          className="flex-[2] rounded-xl bg-[var(--color-primary)] p-3 text-lg font-bold transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+          className="flex-[2] rounded-xl bg-[var(--color-primary)] p-3 text-lg font-bold transition-opacity active:opacity-80 cursor-pointer"
         >
           {da.submit}
         </button>

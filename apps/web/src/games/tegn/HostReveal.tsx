@@ -45,7 +45,7 @@ export default function HostReveal({ room, sessionId }: PhaseComponentProps) {
       </div>
 
       <div className="w-full max-w-md">
-        <DrawingDisplay strokes={drawingData} />
+        <DrawingDisplay data={drawingData} />
       </div>
 
       {/* Fakes */}

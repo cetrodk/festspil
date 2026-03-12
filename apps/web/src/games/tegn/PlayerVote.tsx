@@ -12,6 +12,7 @@ export default function PlayerVote({ room, sessionId }: PhaseComponentProps) {
   const [voted, setVoted] = useState(false);
 
   const phaseData = room.phaseData ?? {};
+  const isArtist = phaseData.isArtist ?? false;
   const allAnswers = phaseData.answersAnonymized ?? [];
   const ownAnswer = allAnswers.find((a: any) => a.isOwn);
   const voteableAnswers = allAnswers.filter((a: any) => !a.isOwn);
@@ -24,6 +25,18 @@ export default function PlayerVote({ room, sessionId }: PhaseComponentProps) {
       content: answerId,
     });
     setVoted(true);
+  }
+
+  if (isArtist) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
+        <p className="text-4xl">🎨</p>
+        <p className="text-2xl font-bold">{da.tegn.artistWaiting}</p>
+        <div className="text-4xl font-mono text-[var(--color-primary)]">
+          <CountdownTimer deadline={room.phaseDeadline ?? null} />
+        </div>
+      </div>
+    );
   }
 
   if (voted || phaseData.myVote) {

@@ -1,15 +1,22 @@
 import { useMemo } from "react";
 import { strokeToPath } from "./strokePath";
-import type { Stroke } from "./DrawingCanvas";
+import { VIEWBOX_WIDTH, type Stroke } from "./DrawingCanvas";
 
-interface Props {
+interface DrawingData {
   strokes: Stroke[];
-  className?: string;
-  width?: number;
-  height?: number;
+  viewBoxHeight: number;
 }
 
-export function DrawingDisplay({ strokes, className = "", width = 400, height = 300 }: Props) {
+interface Props {
+  /** Accepts either the new { strokes, viewBoxHeight } format or a raw strokes array */
+  data: DrawingData | Stroke[];
+  className?: string;
+}
+
+export function DrawingDisplay({ data, className = "" }: Props) {
+  const strokes = Array.isArray(data) ? data : data.strokes;
+  const viewBoxHeight = Array.isArray(data) ? 300 : (data.viewBoxHeight ?? 300);
+
   const paths = useMemo(
     () => strokes.map((stroke) => ({
       d: strokeToPath(stroke),
@@ -19,13 +26,19 @@ export function DrawingDisplay({ strokes, className = "", width = 400, height = 
   );
 
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      className={`w-full rounded-xl bg-[var(--color-surface)] ${className}`}
+    <div
+      className={`rounded-xl bg-[var(--color-surface)] ${className}`}
+      style={{ aspectRatio: "4 / 3" }}
     >
-      {paths.map((path, i) => (
-        <path key={i} d={path.d} fill={path.color} />
-      ))}
-    </svg>
+      <svg
+        viewBox={`0 0 ${VIEWBOX_WIDTH} ${viewBoxHeight}`}
+        preserveAspectRatio="xMidYMid meet"
+        className="h-full w-full"
+      >
+        {paths.map((path, i) => (
+          <path key={i} d={path.d} fill={path.color} />
+        ))}
+      </svg>
+    </div>
   );
 }

@@ -27,7 +27,7 @@ export default function HostVote({ room }: PhaseComponentProps) {
       </div>
 
       <div className="w-full max-w-xl">
-        <DrawingDisplay strokes={drawingData} />
+        <DrawingDisplay data={drawingData} />
       </div>
 
       <div className="flex items-center gap-6">

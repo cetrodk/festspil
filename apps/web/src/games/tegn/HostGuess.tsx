@@ -41,7 +41,7 @@ export default function HostGuess({ room }: PhaseComponentProps) {
         transition={{ type: "spring", stiffness: 200 }}
         className="w-full max-w-2xl"
       >
-        <DrawingDisplay strokes={drawingData} />
+        <DrawingDisplay data={drawingData} />
       </motion.div>
 
       <div className="flex items-center gap-6">

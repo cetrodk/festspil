@@ -2,27 +2,30 @@ import { useRef, useState } from "react";
 import { DrawingCanvas, type DrawingCanvasRef, type Stroke } from "@/games/tegn/DrawingCanvas";
 import { DrawingDisplay } from "@/games/tegn/DrawingDisplay";
 
+interface SubmittedData {
+  strokes: Stroke[];
+  viewBoxHeight: number;
+}
+
 export function DrawTest() {
   const canvasRef = useRef<DrawingCanvasRef>(null);
-  const [submitted, setSubmitted] = useState<Stroke[] | null>(null);
+  const [submitted, setSubmitted] = useState<SubmittedData | null>(null);
 
   function handleSubmit() {
     const strokes = canvasRef.current?.getStrokes();
     if (strokes && strokes.length > 0) {
-      setSubmitted(strokes);
+      const viewBoxHeight = canvasRef.current?.getViewBoxHeight() ?? 300;
+      setSubmitted({ strokes, viewBoxHeight });
     }
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center gap-6 p-6">
-      <h1 className="text-2xl font-bold">Drawing Canvas Test</h1>
+    <div className="flex h-dvh flex-col gap-4 p-6">
+      <h1 className="text-2xl font-bold text-center">Drawing Canvas Test</h1>
 
-      <div className="w-full max-w-sm">
-        <p className="mb-2 text-sm text-[var(--color-text-muted)]">Draw here:</p>
-        <DrawingCanvas ref={canvasRef} width={400} height={300} showControls />
-      </div>
+      <DrawingCanvas ref={canvasRef} showControls className="flex-1 min-h-0" />
 
-      <div className="flex gap-3">
+      <div className="flex gap-3 justify-center">
         <button
           onClick={() => canvasRef.current?.undo()}
           className="rounded-xl bg-[var(--color-surface)] px-4 py-2 text-sm font-medium cursor-pointer"
@@ -44,11 +47,11 @@ export function DrawTest() {
       </div>
 
       {submitted ? (
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md mx-auto">
           <p className="mb-2 text-sm text-[var(--color-text-muted)]">
-            DrawingDisplay (host view) — {submitted.length} stroke(s):
+            DrawingDisplay (host view) — {submitted.strokes.length} stroke(s):
           </p>
-          <DrawingDisplay strokes={submitted} />
+          <DrawingDisplay data={submitted} />
         </div>
       ) : null}
     </div>

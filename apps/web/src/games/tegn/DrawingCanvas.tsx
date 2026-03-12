@@ -1,6 +1,8 @@
-import { useRef, useState, useCallback, useImperativeHandle, forwardRef, useMemo } from "react";
+import { useRef, useState, useCallback, useImperativeHandle, forwardRef, useMemo, useEffect } from "react";
 import { getSvgPathFromStroke, strokeToPath } from "./strokePath";
 import getStroke from "perfect-freehand";
+
+export const VIEWBOX_WIDTH = 400;
 
 export interface Stroke {
   points: number[][];
@@ -10,6 +12,7 @@ export interface Stroke {
 
 export interface DrawingCanvasRef {
   getStrokes(): Stroke[];
+  getViewBoxHeight(): number;
   clear(): void;
   undo(): void;
 }
@@ -20,8 +23,7 @@ interface CachedStroke {
 }
 
 interface Props {
-  width?: number;
-  height?: number;
+  className?: string;
   disabled?: boolean;
   color?: string;
   size?: number;
@@ -39,8 +41,7 @@ const SIZES = [
 export const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(
   function DrawingCanvas(
     {
-      width = 400,
-      height = 300,
+      className,
       disabled = false,
       color: colorProp,
       size: sizeProp,
@@ -56,14 +57,30 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(
     const [internalSize, setInternalSize] = useState(SIZES[0].value);
     const svgRef = useRef<SVGSVGElement>(null);
     const pointsRef = useRef<number[][] | null>(null);
+    const [viewBoxHeight, setViewBoxHeight] = useState(300);
 
     const activeColor = colorProp ?? internalColor;
     const activeSize = sizeProp ?? internalSize;
+
+    // Measure the SVG container and compute viewBox height proportionally
+    useEffect(() => {
+      const svg = svgRef.current;
+      if (!svg) return;
+      const observer = new ResizeObserver((entries) => {
+        const { width, height } = entries[0].contentRect;
+        if (width > 0 && height > 0) {
+          setViewBoxHeight(Math.round(VIEWBOX_WIDTH * (height / width)));
+        }
+      });
+      observer.observe(svg);
+      return () => observer.disconnect();
+    }, []);
 
     const strokes = useMemo(() => cachedStrokes.map((c) => c.stroke), [cachedStrokes]);
 
     useImperativeHandle(ref, () => ({
       getStrokes: () => strokes,
+      getViewBoxHeight: () => viewBoxHeight,
       clear: () => { setCachedStrokes([]); pointsRef.current = null; setRenderTick((t) => t + 1); },
       undo: () => setCachedStrokes((s) => s.slice(0, -1)),
     }));
@@ -73,12 +90,12 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(
         const rect = svgRef.current?.getBoundingClientRect();
         if (!rect) return [0, 0, 0.5];
         return [
-          (e.clientX - rect.left) / rect.width * width,
-          (e.clientY - rect.top) / rect.height * height,
+          (e.clientX - rect.left) / rect.width * VIEWBOX_WIDTH,
+          (e.clientY - rect.top) / rect.height * viewBoxHeight,
           e.pressure || 0.5,
         ];
       },
-      [width, height],
+      [viewBoxHeight],
     );
 
     const handlePointerDown = useCallback(
@@ -130,12 +147,13 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(
       : null;
 
     return (
-      <div>
+      <div className={`flex flex-col ${className ?? ""}`}>
         <svg
           ref={svgRef}
-          viewBox={`0 0 ${width} ${height}`}
-          className="w-full rounded-xl bg-[var(--color-surface)]"
-          style={{ touchAction: "none", aspectRatio: `${width}/${height}` }}
+          viewBox={`0 0 ${VIEWBOX_WIDTH} ${viewBoxHeight}`}
+          preserveAspectRatio="none"
+          className="w-full flex-1 min-h-0 rounded-xl bg-[var(--color-surface)]"
+          style={{ touchAction: "none" }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}

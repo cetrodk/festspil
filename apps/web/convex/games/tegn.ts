@@ -38,8 +38,9 @@ registerGameHandlers("tegn", {
     const basePhase = room.currentPhase?.split("_")[0];
 
     if (basePhase === "draw") {
-      // Validate stroke data is an array
-      if (!Array.isArray(content) || content.length === 0) {
+      // Content is { strokes, viewBoxHeight } or legacy strokes array
+      const strokes = Array.isArray(content) ? content : (content as any)?.strokes;
+      if (!Array.isArray(strokes) || strokes.length === 0) {
         throw new ConvexError("Tegn noget først");
       }
 
@@ -168,7 +169,13 @@ registerGameHandlers("tegn", {
   },
 
   async onVote(ctx, room, player, content) {
-    const drawingIndex = (room.phaseData as any)?.drawingIndex ?? 0;
+    const phaseData = room.phaseData as any;
+    const artistId = phaseData?.currentArtistId;
+    if (player._id === artistId) {
+      throw new ConvexError("Kunstneren kan ikke stemme");
+    }
+
+    const drawingIndex = phaseData?.drawingIndex ?? 0;
     const votePhase = `vote_${drawingIndex}`;
     const vote = String(content);
 
@@ -365,7 +372,7 @@ registerGameHandlers("tegn", {
 
   getExpectedSubmitterCount(room, players) {
     const basePhase = room.currentPhase?.split("_")[0];
-    if (basePhase === "guess") {
+    if (basePhase === "guess" || basePhase === "vote") {
       return players.length - 1; // artist excluded
     }
     return players.length;

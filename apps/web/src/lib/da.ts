@@ -82,5 +82,6 @@ export const da = {
     nextDrawing: "Næste tegning",
     yourGuess: "Dit gæt",
     guessReal: "Gæt det rigtige ord",
+    artistWaiting: "De andre stemmer nu — vent her",
   },
 } as const;
