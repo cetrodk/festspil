@@ -34,9 +34,9 @@ interface Props {
 
 const COLORS = ["#ffffff", "#000000", "#ef4444", "#f59e0b", "#22c55e", "#3b82f6", "var(--color-primary)"];
 const SIZES = [
-  { value: 4, dot: 4 },
-  { value: 10, dot: 10 },
-  { value: 20, dot: 20 },
+  { value: 2, dot: 4 },
+  { value: 5, dot: 10 },
+  { value: 12, dot: 20 },
 ];
 
 export const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(
