@@ -184,46 +184,42 @@ function HostToolbar({
   );
 }
 
-/* ── Game Selector (lobby only) ────────────────────────── */
+/* ── Game Info Card (lobby only) ───────────────────────── */
 
-function GameSelector({
-  currentGameType,
-  roomId,
-  sessionId,
-}: {
-  currentGameType: string;
-  roomId: any;
-  sessionId: string;
-}) {
-  const changeGameType = useMutation(api.rooms.changeGameType);
+function getGameInfo(gameType: string) {
+  const meta = GAME_OPTIONS.find((g) => g.id === gameType) ?? GAME_OPTIONS[0];
+  const strings = gameType === "duel" ? da.duel : gameType === "bluff" ? da.bluff : gameType === "telefon" ? da.telefon : da.tegn;
+  return { ...meta, ...strings };
+}
+
+function GameInfoCard({ gameType }: { gameType: string }) {
+  const game = getGameInfo(gameType);
 
   return (
-    <div className="flex gap-2">
-      {GAME_OPTIONS.map((game) => {
-        const isActive = game.id === currentGameType;
-        const gameInfo = game.id === "duel" ? da.duel : game.id === "bluff" ? da.bluff : game.id === "telefon" ? da.telefon : da.tegn;
-        return (
-          <motion.button
-            key={game.id}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              if (!isActive) {
-                changeGameType({ roomId, hostId: sessionId, gameType: game.id });
-              }
-            }}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all cursor-pointer ${
-              isActive
-                ? "bg-[var(--color-surface-light)] ring-2"
-                : "bg-[var(--color-surface)] opacity-60 hover:opacity-100"
-            }`}
-            style={isActive ? { borderColor: game.color, ringColor: game.color, "--tw-ring-color": game.color } as any : undefined}
-          >
-            <span className="text-lg">{game.icon}</span>
-            <span>{gameInfo.name}</span>
-          </motion.button>
-        );
-      })}
+    <div className="w-full max-w-md rounded-2xl bg-[var(--color-surface)] p-5">
+      <div className="flex items-center gap-3 mb-3">
+        <span className="text-3xl">{game.icon}</span>
+        <h3
+          className="font-display text-2xl font-bold"
+          style={{ color: game.color }}
+        >
+          {game.name}
+        </h3>
+      </div>
+      <p className="text-sm leading-relaxed text-[var(--color-text-muted)]">
+        {game.howToPlay}
+      </p>
+      <div className="mt-3 flex items-center justify-between">
+        <span className="text-xs text-[var(--color-text-muted)]">
+          {game.expects}
+        </span>
+        <a
+          href="/"
+          className="text-xs text-[var(--color-primary-light)] hover:text-[var(--color-primary)] transition-colors"
+        >
+          ← Skift spil
+        </a>
+      </div>
     </div>
   );
 }
@@ -349,17 +345,14 @@ export function HostView() {
         </p>
       </motion.div>
 
-      {/* Game selector */}
+      {/* Game info */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
+        className="w-full flex justify-center"
       >
-        <GameSelector
-          currentGameType={room.gameType}
-          roomId={room._id}
-          sessionId={sessionId}
-        />
+        <GameInfoCard gameType={room.gameType} />
       </motion.div>
 
       {/* Player list */}
