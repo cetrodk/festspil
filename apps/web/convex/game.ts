@@ -25,7 +25,7 @@ export const startGame = mutation({
       .withIndex("by_room", (q) => q.eq("roomId", roomId))
       .collect();
 
-    if (players.length < 2) throw new Error("Need at least 2 players");
+    if (players.length < 3) throw new Error("Need at least 3 players");
 
     const totalRounds = Math.min(players.length, 3);
     const handlers = getGameHandlers(room.gameType);

@@ -106,12 +106,12 @@ export function HostView() {
       </div>
 
       <button
-        disabled={room.players.length < 2}
+        disabled={room.players.length < 3}
         onClick={() => startGame({ roomId: room._id, hostId: sessionId })}
         className="rounded-xl bg-[var(--color-primary)] px-12 py-4 text-2xl font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
       >
-        {room.players.length < 2
-          ? `${da.needMorePlayers} (${room.players.length}/2)`
+        {room.players.length < 3
+          ? `${da.needMorePlayers} (${room.players.length}/3)`
           : da.startGame}
       </button>
     </div>

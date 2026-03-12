@@ -137,15 +137,25 @@ export const getRoomForPlayer = query({
         totalPlayers: players.length,
       };
     } else if (phase === "vote") {
-      // During vote: show anonymized answers, strip authorship
+      // During vote: show anonymized answers, strip authorship + own answer
       const myVote = submissions.find(
         (s) =>
           currentPlayer &&
           s.playerId === currentPlayer._id &&
           s.phase === "vote",
       );
+      const answers = (room.phaseData?.answersAnonymized ?? []) as Array<{
+        id: string;
+        text: string;
+      }>;
+      const myAnswerId = currentPlayer
+        ? (room.phaseData?.answers ?? []).find(
+            (a: any) => a.playerId === currentPlayer._id,
+          )?.id
+        : undefined;
       filteredPhaseData = {
         ...room.phaseData,
+        answersAnonymized: answers.filter((a) => a.id !== myAnswerId),
         myVote: myVote?.content ?? null,
       };
     }
