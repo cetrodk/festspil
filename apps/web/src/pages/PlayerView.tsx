@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useSessionId } from "@/providers/SessionProvider";
+import { gameComponents } from "@/games/registry";
 import { da } from "@/lib/da";
 
 export function PlayerView() {
@@ -20,17 +22,41 @@ export function PlayerView() {
     );
   }
 
-  // For now, always show lobby. Phase routing comes in Phase 2.
-  return <PlayerLobby room={room} />;
-}
+  // Phase routing: if game is playing, show the player phase component
+  if (room.status === "playing" && room.currentPhase) {
+    const components = gameComponents[room.gameType];
+    const PhaseComponent = components?.player[room.currentPhase];
 
-function PlayerLobby({
-  room,
-}: {
-  room: NonNullable<
-    ReturnType<typeof useQuery<typeof api.rooms.getRoomForPlayer>>
-  >;
-}) {
+    if (PhaseComponent) {
+      return (
+        <Suspense
+          fallback={
+            <div className="flex min-h-screen items-center justify-center text-[var(--color-text-muted)]">
+              Indlæser...
+            </div>
+          }
+        >
+          <PhaseComponent room={room} sessionId={sessionId} />
+        </Suspense>
+      );
+    }
+  }
+
+  if (room.status === "finished") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
+        <p className="text-3xl font-bold">{da.gameOver}</p>
+        <a
+          href="/"
+          className="rounded-xl bg-[var(--color-primary)] px-8 py-3 font-bold"
+        >
+          {da.playAgain}
+        </a>
+      </div>
+    );
+  }
+
+  // Lobby view
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-4">
       <h2 className="text-4xl font-bold">{da.youreIn}</h2>
@@ -43,7 +69,7 @@ function PlayerLobby({
           {room.players.length} {da.playersJoined}
         </p>
         <ul className="flex flex-col gap-2">
-          {room.players.map((player) => (
+          {room.players.map((player: any) => (
             <li
               key={player._id}
               className="flex items-center gap-3 rounded-lg bg-[var(--color-surface)] p-2"

@@ -3,6 +3,16 @@
  * Stub file — replaced by Convex codegen when you run `npx convex dev`.
  * Exists so the project builds before Convex is initialized.
  */
+const proxyHandler: ProxyHandler<object> = {
+  get: (_target, prop) =>
+    new Proxy(
+      {},
+      {
+        get: (_t2, fn) => `${String(prop)}.${String(fn)}`,
+      },
+    ),
+};
+
 export const api: any = new Proxy(
   {},
   {
@@ -15,3 +25,5 @@ export const api: any = new Proxy(
       ),
   },
 );
+
+export const internal: any = new Proxy({}, proxyHandler);

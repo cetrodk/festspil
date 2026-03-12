@@ -1,11 +1,16 @@
+import { Suspense } from "react";
 import { useParams } from "react-router-dom";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { useSessionId } from "@/providers/SessionProvider";
+import { gameComponents } from "@/games/registry";
 import { da } from "@/lib/da";
 
 export function HostView() {
   const { code } = useParams<{ code: string }>();
+  const sessionId = useSessionId();
   const room = useQuery(api.rooms.getRoom, code ? { code } : "skip");
+  const startGame = useMutation(api.game.startGame);
 
   if (!room) {
     return (
@@ -15,15 +20,45 @@ export function HostView() {
     );
   }
 
-  // For now, always show lobby. Phase routing comes in Phase 2.
-  return <HostLobby room={room} />;
-}
+  // Phase routing: if game is playing, show the game phase component
+  if (room.status === "playing" && room.currentPhase) {
+    const components = gameComponents[room.gameType];
+    const PhaseComponent = components?.host[room.currentPhase];
 
-function HostLobby({
-  room,
-}: {
-  room: NonNullable<ReturnType<typeof useQuery<typeof api.rooms.getRoom>>>;
-}) {
+    if (PhaseComponent) {
+      return (
+        <div className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
+          <div className="absolute top-4 right-4 font-mono text-sm text-[var(--color-text-muted)]">
+            {room.code}
+          </div>
+          <Suspense
+            fallback={
+              <div className="text-[var(--color-text-muted)]">Indlæser...</div>
+            }
+          >
+            <PhaseComponent room={room} sessionId={sessionId} />
+          </Suspense>
+        </div>
+      );
+    }
+  }
+
+  if (room.status === "finished") {
+    const components = gameComponents[room.gameType];
+    const ScoresComponent = components?.host.scores;
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
+        {ScoresComponent ? (
+          <Suspense fallback={null}>
+            <ScoresComponent room={room} sessionId={sessionId} />
+          </Suspense>
+        ) : null}
+        <p className="text-2xl font-bold">{da.gameOver}</p>
+      </div>
+    );
+  }
+
+  // Lobby view
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
       <p className="text-sm uppercase tracking-widest text-[var(--color-text-muted)]">
@@ -43,7 +78,7 @@ function HostLobby({
           {room.players.length} {da.playersJoined}
         </p>
         <ul className="flex flex-col gap-2">
-          {room.players.map((player) => (
+          {room.players.map((player: any) => (
             <li
               key={player._id}
               className="flex items-center gap-3 rounded-xl bg-[var(--color-surface)] p-3"
@@ -67,7 +102,8 @@ function HostLobby({
 
       <button
         disabled={room.players.length < 2}
-        className="rounded-xl bg-[var(--color-primary)] px-12 py-4 text-2xl font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+        onClick={() => startGame({ roomId: room._id, hostId: sessionId })}
+        className="rounded-xl bg-[var(--color-primary)] px-12 py-4 text-2xl font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
       >
         {room.players.length < 2
           ? `${da.needMorePlayers} (${room.players.length}/2)`

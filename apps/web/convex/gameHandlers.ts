@@ -1,0 +1,57 @@
+import type { MutationCtx, QueryCtx } from "./_generated/server";
+import type { Id, Doc } from "./_generated/dataModel";
+
+export interface GameHandlers {
+  /** Set up a new round: pick prompts, assign matchups, etc. */
+  setupRound(
+    ctx: MutationCtx,
+    room: Doc<"rooms">,
+    players: Doc<"players">[],
+  ): Promise<Record<string, unknown>>;
+
+  /** Handle a player submission during the submit phase */
+  onSubmission(
+    ctx: MutationCtx,
+    room: Doc<"rooms">,
+    player: Doc<"players">,
+    content: unknown,
+  ): Promise<void>;
+
+  /** Build the vote phase data (matchups, answer options, etc.) */
+  buildVoteData(
+    ctx: QueryCtx,
+    room: Doc<"rooms">,
+    players: Doc<"players">[],
+  ): Promise<Record<string, unknown>>;
+
+  /** Handle a player vote */
+  onVote(
+    ctx: MutationCtx,
+    room: Doc<"rooms">,
+    player: Doc<"players">,
+    content: unknown,
+  ): Promise<void>;
+
+  /** Compute results and score changes after voting */
+  computeResults(
+    ctx: MutationCtx,
+    room: Doc<"rooms">,
+    players: Doc<"players">[],
+  ): Promise<{
+    phaseData: Record<string, unknown>;
+    scoreDeltas: Map<Id<"players">, number>;
+  }>;
+}
+
+// Game handler registry — populated by each game module
+const handlers = new Map<string, GameHandlers>();
+
+export function registerGameHandlers(gameType: string, h: GameHandlers) {
+  handlers.set(gameType, h);
+}
+
+export function getGameHandlers(gameType: string): GameHandlers {
+  const h = handlers.get(gameType);
+  if (!h) throw new Error(`No handlers registered for game: ${gameType}`);
+  return h;
+}
