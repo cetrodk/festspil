@@ -12,7 +12,7 @@ export default function HostSubmit({ room }: PhaseComponentProps) {
 
   const handleTick = useCallback((s: number) => {
     if (s <= 5 && s > 0) sfxUrgent();
-    else if (s <= 15 && s > 5) sfxTick();
+    else if (s <= 10 && s > 5) sfxTick();
   }, []);
 
   // Highlight the blank in the prompt

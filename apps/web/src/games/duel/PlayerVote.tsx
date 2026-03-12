@@ -71,7 +71,7 @@ export default function PlayerVote({ room, sessionId }: PhaseComponentProps) {
             {answer.text}
             {answer.isOwn ? (
               <span className="block text-xs text-[var(--color-text-muted)] mt-1">
-                Dit svar
+                {da.yourAnswer}
               </span>
             ) : null}
           </motion.button>

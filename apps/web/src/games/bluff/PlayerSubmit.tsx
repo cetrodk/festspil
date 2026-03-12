@@ -40,6 +40,7 @@ export default function PlayerSubmit({ room, sessionId }: PhaseComponentProps) {
   }
 
   if (submitted || phaseData.mySubmission) {
+    const myAnswer = phaseData.mySubmission ?? answer;
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
         <motion.div
@@ -51,6 +52,19 @@ export default function PlayerSubmit({ room, sessionId }: PhaseComponentProps) {
           ✓
         </motion.div>
         <p className="text-2xl font-bold">{da.waiting}</p>
+        {myAnswer ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="max-w-xs rounded-xl bg-[var(--color-surface)] px-6 py-3 text-center"
+          >
+            <p className="text-xs uppercase tracking-widest text-[var(--color-text-muted)] mb-1">
+              {da.bluff.yourFake}
+            </p>
+            <p className="text-lg font-semibold">{myAnswer}</p>
+          </motion.div>
+        ) : null}
         <div className="text-4xl font-mono text-[var(--color-primary)]">
           <CountdownTimer deadline={room.phaseDeadline ?? null} />
         </div>
@@ -76,16 +90,23 @@ export default function PlayerSubmit({ room, sessionId }: PhaseComponentProps) {
       </motion.p>
 
       <form onSubmit={handleSubmit} className="flex w-full max-w-xs flex-col gap-4">
-        <input
-          type="text"
-          maxLength={80}
-          value={answer}
-          onChange={(e) => { setAnswer(e.target.value); setError(""); }}
-          placeholder={da.bluff.writeFake}
-          className="rounded-xl bg-[var(--color-surface)] p-4 text-center text-lg placeholder:text-[var(--color-text-muted)]"
-          autoComplete="off"
-          autoFocus
-        />
+        <div>
+          <input
+            type="text"
+            maxLength={80}
+            value={answer}
+            onChange={(e) => { setAnswer(e.target.value); setError(""); }}
+            placeholder={da.bluff.writeFake}
+            className="w-full rounded-xl bg-[var(--color-surface)] p-4 text-center text-lg placeholder:text-[var(--color-text-muted)]"
+            autoComplete="off"
+            autoFocus
+          />
+          {answer.length > 40 ? (
+            <p className={`mt-1 text-right text-xs ${answer.length > 72 ? "text-red-400" : "text-[var(--color-text-muted)]"}`}>
+              {answer.length}/80
+            </p>
+          ) : null}
+        </div>
         {error ? (
           <p className="text-center text-sm text-red-400">{error}</p>
         ) : null}

@@ -3,7 +3,7 @@ import { useMutation } from "convex/react";
 import { motion } from "framer-motion";
 import { api } from "../../../convex/_generated/api";
 import { CountdownTimer } from "@festspil/ui/CountdownTimer";
-import { sfxReveal, sfxFanfare } from "@/lib/sounds";
+import { sfxReveal, sfxFanfare, sfxScore } from "@/lib/sounds";
 import { GameAvatar } from "@/components/GameAvatar";
 import { da } from "@/lib/da";
 import type { PhaseComponentProps } from "../registry";
@@ -18,13 +18,26 @@ export default function HostReveal({ room, sessionId }: PhaseComponentProps) {
   // Separate fakes from truth
   const fakes = results.filter((r: any) => !r.isReal);
   const truth = results.find((r: any) => r.isReal);
-  const totalItems = results.length;
 
   useEffect(() => {
     sfxReveal();
-    const t = setTimeout(sfxFanfare, totalItems * 400 + 500);
-    return () => clearTimeout(t);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    // Per-fake reveal pings
+    fakes.forEach((_: any, i: number) => {
+      timers.push(setTimeout(sfxScore, i * 400 + 200));
+    });
+
+    // Fanfare on truth reveal
+    const truthDelay = (fakes.length * 0.4 + 0.5) * 1000;
+    timers.push(setTimeout(sfxFanfare, truthDelay));
+
+    return () => timers.forEach(clearTimeout);
   }, []);
+
+  // Truth card appears after all fakes + a pause
+  const truthDelay = fakes.length * 0.4 + 0.5;
+  const buttonDelay = truthDelay + 0.6;
 
   return (
     <div className="flex flex-col items-center gap-8">
@@ -64,17 +77,30 @@ export default function HostReveal({ room, sessionId }: PhaseComponentProps) {
               ) : null}
             </div>
 
-            <div className="text-right min-w-[3rem]">
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: i * 0.4 + 0.3 }}
-                className="text-2xl font-black text-[var(--color-text-muted)]"
-              >
-                {result.fooledCount}
-              </motion.p>
+            <div className="text-right min-w-[4rem]">
+              {result.fooledCount > 0 ? (
+                <motion.p
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.4 + 0.3, type: "spring" }}
+                  className="text-2xl font-black text-[var(--color-primary)]"
+                >
+                  +{result.fooledCount * 500}
+                </motion.p>
+              ) : (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.4 + 0.3 }}
+                  className="text-lg font-bold text-[var(--color-text-muted)]"
+                >
+                  +0
+                </motion.p>
+              )}
               <p className="text-xs text-[var(--color-text-muted)]">
-                {da.bluff.players}
+                {result.fooledCount === 1
+                  ? `narret 1 ${da.bluff.players.slice(0, -1)}`
+                  : `narret ${result.fooledCount}`}
               </p>
             </div>
           </motion.div>
@@ -84,12 +110,13 @@ export default function HostReveal({ room, sessionId }: PhaseComponentProps) {
       {/* Truth reveal */}
       {truth ? (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: [0, 1.05, 1] }}
           transition={{
-            delay: fakes.length * 0.4 + 0.5,
+            delay: truthDelay,
+            duration: 0.5,
             type: "spring",
-            stiffness: 150,
+            stiffness: 120,
           }}
           className="w-full max-w-3xl rounded-2xl bg-[var(--color-primary)]/15 ring-2 ring-[var(--color-primary)] p-6 text-center"
         >
@@ -112,7 +139,7 @@ export default function HostReveal({ room, sessionId }: PhaseComponentProps) {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: totalItems * 0.4 + 1 }}
+        transition={{ delay: buttonDelay }}
         className="flex items-center gap-4"
       >
         <button

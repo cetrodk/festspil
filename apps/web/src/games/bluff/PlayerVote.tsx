@@ -12,7 +12,9 @@ export default function PlayerVote({ room, sessionId }: PhaseComponentProps) {
   const [voted, setVoted] = useState(false);
 
   const phaseData = room.phaseData ?? {};
-  const answers = phaseData.answersAnonymized ?? [];
+  const allAnswers = phaseData.answersAnonymized ?? [];
+  const ownAnswer = allAnswers.find((a: any) => a.isOwn);
+  const voteableAnswers = allAnswers.filter((a: any) => !a.isOwn);
 
   async function handleVote(answerId: string) {
     sfxClick();
@@ -49,29 +51,38 @@ export default function PlayerVote({ room, sessionId }: PhaseComponentProps) {
         <CountdownTimer deadline={room.phaseDeadline ?? null} />
       </div>
 
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="max-w-xs text-center text-base text-[var(--color-text-muted)]"
+      >
+        {phaseData.promptText}
+      </motion.p>
+
+      {ownAnswer ? (
+        <div className="w-full max-w-xs">
+          <p className="mb-1 text-center text-xs uppercase tracking-widest text-[var(--color-text-muted)]">
+            {da.bluff.yourFake}
+          </p>
+          <div className="rounded-xl border-2 border-dashed border-[var(--color-text-muted)]/40 bg-[var(--color-surface)]/50 p-4 text-center text-lg font-medium text-[var(--color-text-muted)]">
+            {ownAnswer.text}
+          </div>
+        </div>
+      ) : null}
+
       <p className="text-lg font-bold">{da.bluff.guessReal}</p>
 
       <div className="flex w-full max-w-xs flex-col gap-3">
-        {answers.map((answer: any, i: number) => (
+        {voteableAnswers.map((answer: any, i: number) => (
           <motion.button
             key={answer.id}
             initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: answer.isOwn ? 0.4 : 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            onClick={() => !answer.isOwn && handleVote(answer.id)}
-            disabled={answer.isOwn}
-            className={`rounded-xl bg-[var(--color-surface)] p-4 text-lg font-medium text-left ${
-              answer.isOwn
-                ? "cursor-not-allowed"
-                : "transition-transform hover:scale-105 active:scale-95 cursor-pointer"
-            }`}
+            onClick={() => handleVote(answer.id)}
+            className="rounded-xl bg-[var(--color-surface)] p-4 text-lg font-medium text-left transition-transform hover:scale-105 active:scale-95 cursor-pointer"
           >
             {answer.text}
-            {answer.isOwn ? (
-              <span className="block text-xs text-[var(--color-text-muted)] mt-1">
-                {da.bluff.yourFake}
-              </span>
-            ) : null}
           </motion.button>
         ))}
       </div>

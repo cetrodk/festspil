@@ -33,6 +33,7 @@ export const da = {
   gameOver: "Spillet er slut!",
   playAgain: "Spil igen",
   backToLobby: "Tilbage til lobbyen",
+  yourAnswer: "Dit svar",
   lookAtScreen: "Se op på skærmen!",
   waiting: "Venter på andre...",
 
