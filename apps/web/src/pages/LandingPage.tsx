@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Swords, Drama, Paintbrush, Phone } from "lucide-react";
+import { Swords, Drama, Paintbrush, Phone, Tag, ExternalLink } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import { useSessionId } from "@/providers/SessionProvider";
 import { da } from "@/lib/da";
@@ -139,6 +139,38 @@ function GameGrid({ onSelect }: { onSelect: (game: Game) => void }) {
           </motion.button>
         ))}
       </div>
+
+      {/* External games */}
+      <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-text-muted)]">
+        {da.externalGames}
+      </p>
+
+      <motion.a
+        href="https://quizmaster.cetropolis.dk/"
+        target="_blank"
+        rel="noopener noreferrer"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 + GAMES.length * 0.07, type: "spring", stiffness: 200 }}
+        whileHover={{ scale: 1.03, y: -2 }}
+        whileTap={{ scale: 0.97 }}
+        className="card-glow flex w-full items-center gap-4 rounded-2xl bg-[var(--color-surface)] p-4 sm:p-5 cursor-pointer transition-shadow hover:shadow-lg"
+        style={{ "--tw-shadow-color": "var(--color-pris-glow)" } as any}
+      >
+        <Tag className="h-8 w-8 shrink-0 sm:h-10 sm:w-10" style={{ color: "var(--color-pris)" }} />
+        <div className="flex flex-col gap-0.5 text-left">
+          <span
+            className="font-display text-lg font-bold sm:text-xl"
+            style={{ color: "var(--color-pris)" }}
+          >
+            {da.pris.name}
+          </span>
+          <span className="text-xs text-[var(--color-text-muted)] leading-relaxed sm:text-sm">
+            {da.pris.description}
+          </span>
+        </div>
+        <ExternalLink className="ml-auto h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
+      </motion.a>
     </motion.div>
   );
 }

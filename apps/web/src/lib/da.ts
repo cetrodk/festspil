@@ -114,4 +114,12 @@ export const da = {
     original: "Original",
     matchBonus: "Det matchede originalen!",
   },
+
+  // External games
+  externalGames: "Bonusspil",
+  opensNewTab: "Åbner i nyt faneblad",
+  pris: {
+    name: "Pris-quiz",
+    description: "Gæt prisen på brugte ting fra DBA",
+  },
 } as const;
