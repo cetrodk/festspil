@@ -1,4 +1,5 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { getAvatarColor } from "./lib/colors";
 
@@ -190,12 +191,51 @@ export const heartbeat = mutation({
     const rooms = await Promise.all(players.map((p) => ctx.db.get(p.roomId)));
     const now = Date.now();
 
+    const activeRoomIds: Set<string> = new Set();
     await Promise.all(
       players
-        .filter((_, i) => rooms[i] && rooms[i]!.status !== "finished")
+        .filter((_, i) => {
+          const room = rooms[i];
+          if (room && room.status !== "finished") {
+            activeRoomIds.add(room._id);
+            return true;
+          }
+          return false;
+        })
         .map((p) =>
           ctx.db.patch(p._id, { isConnected: true, lastSeen: now }),
         ),
+    );
+
+    // Schedule a sweep for each active room to mark stale players
+    for (const roomId of activeRoomIds) {
+      await ctx.scheduler.runAfter(
+        60_000, // 60s from now
+        internal.players.sweepDisconnected,
+        { roomId },
+      );
+    }
+  },
+});
+
+/** Mark players as disconnected if their lastSeen is older than 60s. */
+export const sweepDisconnected = internalMutation({
+  args: { roomId: v.id("rooms") },
+  handler: async (ctx, { roomId }) => {
+    const room = await ctx.db.get(roomId);
+    if (!room || room.status === "finished") return;
+
+    const players = await ctx.db
+      .query("players")
+      .withIndex("by_room", (q) => q.eq("roomId", roomId))
+      .collect();
+
+    const staleThreshold = Date.now() - 60_000;
+
+    await Promise.all(
+      players
+        .filter((p) => p.isConnected && p.lastSeen < staleThreshold)
+        .map((p) => ctx.db.patch(p._id, { isConnected: false })),
     );
   },
 });

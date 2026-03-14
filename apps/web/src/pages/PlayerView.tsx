@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "convex/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "../../convex/_generated/api";
 import { useSessionId } from "@/providers/SessionProvider";
+import { useHeartbeat } from "@/hooks/useHeartbeat";
 import { gameComponents } from "@/games/registry";
 import { GameAvatar } from "@/components/GameAvatar";
 import { AvatarPickerModal } from "@/components/AvatarPickerModal";
@@ -46,6 +47,8 @@ export function PlayerView() {
 
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const changeAvatar = useMutation(api.players.changeAvatar);
+
+  useHeartbeat(sessionId);
 
   if (!room) {
     return (
