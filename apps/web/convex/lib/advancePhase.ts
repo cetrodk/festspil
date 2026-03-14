@@ -222,9 +222,12 @@ export async function advancePhaseInternal(
     return;
   }
 
-  // Telefon reveal is host-driven (no auto-timer)
+  // Telefon reveal is host-driven but gets a generous fallback timer
+  // so the game doesn't hang forever if the host disconnects
   const isTelefonReveal = nextPhase === "reveal" && room.gameType === "telefon";
-  const duration = isTelefonReveal ? 0 : getPhaseDuration(nextPhase, room.settings as Record<string, unknown> | undefined);
+  const duration = isTelefonReveal
+    ? 5 * 60_000 // 5 min fallback — auto-finish if host disappears
+    : getPhaseDuration(nextPhase, room.settings as Record<string, unknown> | undefined);
   const deadline = duration > 0 ? Date.now() + duration : undefined;
 
   await ctx.db.patch(room._id, {
